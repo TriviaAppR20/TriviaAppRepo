@@ -1,30 +1,27 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, Button } from "react-native";
+import { View, Text, StyleSheet, Button, Alert } from "react-native";
 import Slider from "@react-native-community/slider";
 import { Picker } from "@react-native-picker/picker";
-import { useNavigation } from '@react-navigation/native';
 
-export default function GenerateQuizScreen({navigation}) {
+export default function GenerateQuizScreen({ navigation }) {
   const [categories, setCategories] = useState([]);
   const [amountOfQuestions, setAmountOfQuestions] = useState(10);
-  const [category, setCategory] = useState(null);
-  const [difficulty, setDifficulty] = useState(null);
-  const [type, setType] = useState(null)
+  const [category, setCategory] = useState("");
+  const [difficulty, setDifficulty] = useState("");
+  const [type, setType] = useState("");
 
-  const apiUrl = "https://opentdb.com/api.php"
-  
-  const queryParams = [`amount=${amountOfQuestions}`]
-  if (category) {
-    queryParams.push(`category=${category}`)
-  }
-  if (difficulty) {
-    queryParams.push(`difficulty=${difficulty}`)
-  }
-  if (type) {
-    queryParams.push(`type=${type}`)
-  }
+  const apiUrl = "https://opentdb.com/api.php";
 
-  const queryUrl = `${apiUrl}?${queryParams.join('&')}`
+  const generateQueryUrl = () => {
+    const queryParams = [`amount=${amountOfQuestions}`];
+
+    if (category) queryParams.push(`category=${category}`);
+    if (difficulty) queryParams.push(`difficulty=${difficulty}`);
+    if (type) queryParams.push(`type=${type}`);
+
+    const queryUrl = `${apiUrl}?${queryParams.join("&")}`;
+    return queryUrl;
+  };
 
   const fetchCategories = async () => {
     try {
@@ -38,7 +35,8 @@ export default function GenerateQuizScreen({navigation}) {
 
   const fetchQuestions = async () => {
     try {
-      const response = await fetch(queryUrl);
+      const url = generateQueryUrl();
+      const response = await fetch(url);
       const data = await response.json();
       return data;
     } catch (error) {
@@ -47,9 +45,38 @@ export default function GenerateQuizScreen({navigation}) {
   };
 
   const generateQuiz = async () => {
-    const data = await fetchQuestions()
-    navigation.navigate("Game", { questions: data.results })
-  }
+    const data = await fetchQuestions();
+    if (data.response_code === 0) {
+      navigation.navigate("Game", { questions: data.results });
+    } else {
+      let errorMessage = "";
+
+      switch (data.response_code) {
+        case 1:
+          errorMessage =
+            "No Results: Could not return results. The API doesn't have enough questions for your query (e.g., asking for 50 questions in a category that only has 20).";
+          break;
+        case 2:
+          errorMessage =
+            "Invalid Parameter: Contains an invalid parameter. Arguments passed aren't valid (e.g., Amount = 'Five' instead of a number).";
+          break;
+        case 3:
+          errorMessage = "Token Not Found: Session Token does not exist.";
+          break;
+        case 4:
+          errorMessage =
+            "Token Empty: Session Token has returned all possible questions for the specified query. You may need to reset the Token.";
+          break;
+        case 5:
+          errorMessage =
+            "Rate Limit Exceeded: Too many requests. Each IP can only access the API once every 5 seconds.";
+          break;
+        default:
+          errorMessage = "An unknown error occurred.";
+      }
+      Alert.alert("Error", errorMessage, [{ text: "OK" }]);
+    }
+  };
 
   useEffect(() => {
     fetchCategories();
@@ -83,7 +110,7 @@ export default function GenerateQuizScreen({navigation}) {
         }}
         style={styles.picker}
       >
-        <Picker.Item label="All categories" value={null} />
+        <Picker.Item label="All categories" value={""} />
         {categories.map((category) => (
           <Picker.Item
             key={category.id}
@@ -101,7 +128,7 @@ export default function GenerateQuizScreen({navigation}) {
         }}
         style={styles.picker}
       >
-        <Picker.Item label="Any difficulty" value={null} />
+        <Picker.Item label="Any difficulty" value={""} />
         <Picker.Item label="Easy" value={"easy"} />
         <Picker.Item label="Medium" value={"medium"} />
         <Picker.Item label="Hard" value={"hard"} />
@@ -115,13 +142,13 @@ export default function GenerateQuizScreen({navigation}) {
         }}
         style={styles.picker}
       >
-        <Picker.Item label="Any type" value={null} />
+        <Picker.Item label="Any type" value={""} />
         <Picker.Item label="Multiple choice" value={"multiple"} />
         <Picker.Item label="True / False" value={"boolean"} />
       </Picker>
 
-      <Text>{queryUrl}</Text>
-      <View style={styles.buttonContainer} >
+      <Text>{generateQueryUrl()}</Text>
+      <View style={styles.buttonContainer}>
         <Button title="START QUIZ" onPress={() => generateQuiz()}></Button>
       </View>
     </View>
@@ -171,9 +198,9 @@ const styles = StyleSheet.create({
   buttonContainer: {
     flex: 1,
     display: "flex",
-    flexDirection:"column",
-    justifyContent:"center",
-    alignItems:"center",
+    flexDirection: "column",
+    justifyContent: "center",
+    alignItems: "center",
     padding: 20,
-  }
+  },
 });
