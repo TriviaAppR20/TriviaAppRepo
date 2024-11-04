@@ -17,6 +17,13 @@ const Lobby = () => {
   // adds players data to the game subcollection 'players'
   // this is where all of the players who have joined are listed as array
   // this is why we can sync countdowns and question between all players
+
+  //  currenlty players are known as by their uid.
+  //  it would be cool to have "choose name" feature for players
+  //  not sure where it should be implemented, maybe here for people who join
+  //  and people who host aka users with email accounts, in the profile??
+  //  discuss...
+
   const addPlayerToLobby = async (gameId, playerId, playerName) => {
     try {
       await addDoc(collection(db, 'games', gameId, 'players'), {
@@ -31,7 +38,7 @@ const Lobby = () => {
     }
   };
 
-
+ 
 
   const handleJoinLobby = () => {
     const q = query(collection(db, 'games'), where('gameCode', '==', gameCode));
@@ -39,29 +46,45 @@ const Lobby = () => {
       if (!querySnapshot.empty) {
         const lobbyDoc = querySnapshot.docs[0];
         setLobbyData({ id: lobbyDoc.id, ...lobbyDoc.data() });
-        console.log('Joined lobby:', lobbyDoc.data());
-
-        // Add the current player to the lobby
+        console.log('Lobby data fetched:', lobbyDoc.data());
+  
+        // Get game status to check if it has started
+        const gameStatus = lobbyDoc.data().status;
+  
+        // Check if the current user is authenticated
         const currentUser = auth.currentUser;
         if (currentUser) {
-          addPlayerToLobby(lobbyDoc.id, currentUser.uid, currentUser.email || 'Anonymous');
+          // If game has not started, add player to lobby, started games cannot be joined
+          if (gameStatus !== 'started') {
+            addPlayerToLobby(lobbyDoc.id, currentUser.uid, currentUser.email || 'Anonymous');
+  
+            // Unsubscribe from the listener before navigating, this kept readding players later
+            unsubscribe();
+  
+            // Navigate to the KahootGameScreen only once the user has joined
+            navigation.navigate('KahootGameScreen', {
+              gameCode: lobbyDoc.data().gameCode,
+              quizTitle: lobbyDoc.data().quizTitle,
+              gameId: lobbyDoc.id,
+            });
+          } else {
+            console.warn('Game has already started. Cannot join.');
+            alert('The game has already started. You cannot join at this time.');
+          }
         } else {
           console.warn('User not authenticated');
           alert('You must be logged in to join the lobby.');
         }
-
-        // Navigate to GameScreen
-        navigation.navigate('KahootGameScreen', {
-          gameCode: lobbyDoc.data().gameCode,
-          quizTitle: lobbyDoc.data().quizTitle,
-          gameId: lobbyDoc.id,
-        });
       } else {
         alert('Invalid game code!');
       }
     });
+  
+    // Return the unsubscribe function for cleanup
     return unsubscribe;
   };
+  
+  
 
   return (
     <View style={styles.container}>
