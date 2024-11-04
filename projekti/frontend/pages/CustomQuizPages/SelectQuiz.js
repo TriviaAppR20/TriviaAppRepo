@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, Button, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
-import { db, auth } from '../../../backend/firebase';
+import { db, auth } from '../../../backend/firebase/firebase';
 import { collection, query, where, getDocs, addDoc } from 'firebase/firestore';
 
 const SelectQuiz = ({ navigation }) => {
@@ -40,7 +40,7 @@ const createLobbyAndNavigate = async (quiz) => {
       creatorId: auth.currentUser?.uid,
     });
     console.log('Lobby created with code:', gameCode);
-    navigation.navigate('GameScreen', { gameCode, quizTitle: quiz.quizTitle, gameId: gameDocRef.id });
+    navigation.navigate('KahootGameScreen', { gameCode, quizTitle: quiz.quizTitle, gameId: gameDocRef.id });
 
   } catch (error) {
     console.error('Error creating lobby:', error);

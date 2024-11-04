@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
-import { db, auth } from '../../../backend/firebase';
+import { db, auth } from '../../../backend/firebase/firebase';
 import { collection, addDoc } from 'firebase/firestore';
 
 const CreateQuiz = ({ navigation }) => {

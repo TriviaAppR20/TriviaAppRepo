@@ -1,8 +1,8 @@
 import { useNavigation } from '@react-navigation/native';
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button } from 'react-native';
+import { auth } from '../../backend/firebase/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../../../backend/firebase';
 
 const LoginScreen = () => {
   const navigation = useNavigation();

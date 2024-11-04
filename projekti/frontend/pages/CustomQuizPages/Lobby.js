@@ -17,7 +17,22 @@ const Lobby = () => {
   // adds players data to the game subcollection 'players'
   // this is where all of the players who have joined are listed as array
   // this is why we can sync countdowns and question between all players
-  
+  const addPlayerToLobby = async (gameId, playerId, playerName) => {
+    try {
+      await addDoc(collection(db, 'games', gameId, 'players'), {
+        playerId,
+        playerName,
+        joinedAt: new Date(),
+      });
+      console.log('Player added to the lobby:', playerName);
+    } catch (error) {
+      console.error('Error adding player to the lobby:', error);
+      alert('Failed to join the lobby. Please try again.');
+    }
+  };
+
+
+
   const handleJoinLobby = () => {
     const q = query(collection(db, 'games'), where('gameCode', '==', gameCode));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
@@ -26,22 +41,17 @@ const Lobby = () => {
         setLobbyData({ id: lobbyDoc.id, ...lobbyDoc.data() });
         console.log('Joined lobby:', lobbyDoc.data());
 
-        const addPlayerToLobby = async (gameId, playerId, playerName) => {
-          await addDoc(collection(db, 'games', gameId, 'players'), {
-            playerId,
-            playerName,
-            joinedAt: new Date(),
-          });
-        };
-
         // Add the current player to the lobby
         const currentUser = auth.currentUser;
         if (currentUser) {
           addPlayerToLobby(lobbyDoc.id, currentUser.uid, currentUser.email || 'Anonymous');
+        } else {
+          console.warn('User not authenticated');
+          alert('You must be logged in to join the lobby.');
         }
 
         // Navigate to GameScreen
-        navigation.navigate('GameScreen', {
+        navigation.navigate('KahootGameScreen', {
           gameCode: lobbyDoc.data().gameCode,
           quizTitle: lobbyDoc.data().quizTitle,
           gameId: lobbyDoc.id,

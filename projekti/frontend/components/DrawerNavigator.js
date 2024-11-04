@@ -13,6 +13,7 @@ export default function DrawerNavigator() {
     >
       <Drawer.Screen name="Home" component={HomeScreen} />
       <Drawer.Screen name="Generate Quiz" component={GenerateQuizScreen} />
+      
     </Drawer.Navigator>
   );
 }
