@@ -2,6 +2,7 @@ import { createDrawerNavigator } from "@react-navigation/drawer";
 import HomeScreen from "../pages/HomeScreen";
 import GenerateQuizScreen from "../pages/GenerateQuizScreen";
 import AboutScreen from "../pages/AboutScreen";
+import HowToPlayScreen from "../pages/HowToPlayScreen";
 
 const Drawer = createDrawerNavigator();
 
@@ -18,6 +19,7 @@ export default function DrawerNavigator() {
     >
       <Drawer.Screen name="Home" component={HomeScreen} />
       <Drawer.Screen name="Generate Quiz" component={GenerateQuizScreen} />
+      <Drawer.Screen name="How To Play" component={HowToPlayScreen} />
       <Drawer.Screen name="About" component={AboutScreen} />
     </Drawer.Navigator>
   );
