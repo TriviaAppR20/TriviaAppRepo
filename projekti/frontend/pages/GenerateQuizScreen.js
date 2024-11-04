@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, Button, Alert } from "react-native";
 import Slider from "@react-native-community/slider";
 import { Picker } from "@react-native-picker/picker";
+import { TouchableOpacity } from "react-native";
 
 export default function GenerateQuizScreen({ navigation }) {
   const [categories, setCategories] = useState([]);
@@ -96,9 +97,9 @@ export default function GenerateQuizScreen({ navigation }) {
           step={1}
           value={amountOfQuestions}
           onValueChange={(value) => setAmountOfQuestions(value)}
-          minimumTrackTintColor="#000"
+          minimumTrackTintColor="#001011ff"
           maximumTrackTintColor="#444"
-          thumbTintColor="#000"
+          thumbTintColor="#19DFE6ff"
         />
       </View>
 
@@ -147,9 +148,10 @@ export default function GenerateQuizScreen({ navigation }) {
         <Picker.Item label="True / False" value={"boolean"} />
       </Picker>
 
-      <Text>{generateQueryUrl()}</Text>
       <View style={styles.buttonContainer}>
-        <Button title="START QUIZ" onPress={() => generateQuiz()}></Button>
+        <TouchableOpacity style={styles.startButton} onPress={() => generateQuiz()}>
+          <Text style={styles.buttonText}>Start Quiz</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -162,9 +164,11 @@ const styles = StyleSheet.create({
     justifyContent: "start",
     alignItems: "center",
     padding: 24,
+    backgroundColor: "#EEE",
   },
   genericLabel: {
     marginBottom: 8,
+    color: "#001011ff"
   },
   header: {
     fontSize: 24,
@@ -181,6 +185,7 @@ const styles = StyleSheet.create({
   },
   slider: {
     width: "80%",
+    paddingLeft: 8,
   },
   sliderLabel: {
     fontSize: 16,
@@ -203,4 +208,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 20,
   },
+  startButton: {
+    paddingVertical: 18,
+    paddingHorizontal: 38,
+    borderWidth: 3,
+    borderRadius: 24,
+    borderColor: "#001011ff",
+    backgroundColor: "#001011ff",
+  },
+  buttonText: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#FFF",
+  }
 });

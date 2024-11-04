@@ -11,7 +11,11 @@ export default function DrawerNavigator() {
   return (
     <Drawer.Navigator
       initialRouteName="Home"
-      screenOptions={{ headerTitleAlign: "center" }}
+      screenOptions={{
+        headerTitleAlign: "center",
+        drawerInactiveTintColor: "#001011ff",
+        drawerActiveTintColor: "#001011ff",
+      }}
     >
       <Drawer.Screen name="Home" component={HomeScreen} />
       <Drawer.Screen name="Generate Quiz" component={GenerateQuizScreen} />
