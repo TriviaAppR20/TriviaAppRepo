@@ -1,60 +1,70 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, Button, FlatList } from "react-native";
+import { View, Text, Button, FlatList, TouchableOpacity, StyleSheet } from "react-native";
+import { decode } from "html-entities";
 
-export default function GameScreen({ route }) {
+export default function GameScreen({ route, navigation }) {
   const { questions } = route.params;
+  const timeToAnswer = 35;
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [timer, setTimer] = useState(20); // Timer starts at 20 seconds
+  const [timer, setTimer] = useState(timeToAnswer);
+  const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [answerSelected, setAnswerSelected] = useState(false);
   const [gameEnded, setGameEnded] = useState(false);
+  const [shuffledAnswers, setShuffledAnswers] = useState([]);
+  const [score, setScore] = useState(0);
 
   const currentQuestion = questions[currentQuestionIndex];
-  const allAnswers = [
-    ...currentQuestion.incorrect_answers,
-    currentQuestion.correct_answer,
-  ].sort(() => Math.random() - 0.5); // Shuffle answers
 
-  // Reset timer and answerSelected when currentQuestionIndex changes
   useEffect(() => {
-    setTimer(20); // Reset timer for each question
-    setAnswerSelected(false); // Reset answer selection
+    const allAnswers = [
+      ...currentQuestion.incorrect_answers,
+      currentQuestion.correct_answer,
+    ].sort(() => Math.random() - 0.5);
+    setShuffledAnswers(allAnswers);
+    setTimer(timeToAnswer);
+    setSelectedAnswer(null);
+    setAnswerSelected(false);
 
     const countdown = setInterval(() => {
       setTimer((prevTimer) => {
         if (prevTimer === 1) {
-          // Move to the next question when time runs out
           handleNextQuestion();
-          return prevTimer;
+          return 0;
         }
         return prevTimer - 1;
       });
     }, 1000);
 
-    return () => clearInterval(countdown); // Cleanup timer on component unmount or question change
+    return () => clearInterval(countdown);
   }, [currentQuestionIndex]);
 
   const handleNextQuestion = () => {
-    // If there are more questions, go to the next one
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     } else {
-      setGameEnded(true); // End game if all questions are answered
+      setGameEnded(true);
     }
   };
 
   const handleAnswerSelection = (answer) => {
     if (!answerSelected) {
-      setAnswerSelected(true); // Mark question as answered
-      // Here you could check if the answer is correct, handle scoring, etc.
-      setTimeout(handleNextQuestion, 1000); // Brief delay before moving to the next question
+      setAnswerSelected(true);
+      setSelectedAnswer(answer);
+      
+      if (answer === currentQuestion.correct_answer) {
+        setScore((prevScore) => prevScore + 1);
+      }
+      setTimeout(handleNextQuestion, 2000);
     }
   };
 
   if (gameEnded) {
     return (
-      <View>
-        <Text>Quiz Completed!</Text>
+      <View style={{ padding: 20, alignItems: "center" }}>
+        <Text style={{ fontSize: 24, marginBottom: 20 }}>Quiz Completed!</Text>
+        <Text style={{ fontSize: 18 }}>Your Score: {score} / {questions.length}</Text>
+        <Button title="Generate new quiz" onPress={() => navigation.navigate("Generate Quiz")} />
       </View>
     );
   }
@@ -62,20 +72,45 @@ export default function GameScreen({ route }) {
   return (
     <View style={{ padding: 20 }}>
       <Text>Time Remaining: {timer} seconds</Text>
-      <Text>Category: {currentQuestion.category}</Text>
-      <Text>Question: {currentQuestion.question}</Text>
+      <Text>Category: {decode(currentQuestion.category)}</Text>
+      <Text>Question: {decode(currentQuestion.question)}</Text>
 
       <FlatList
-        data={allAnswers}
+        data={shuffledAnswers}
         keyExtractor={(item) => item}
         renderItem={({ item }) => (
-          <Button
-            title={item}
+          <TouchableOpacity
+          style={[
+            styles.answerButton,
+            answerSelected && item === currentQuestion.correct_answer && styles.correctAnswer,
+            answerSelected && selectedAnswer === item && item !== currentQuestion.correct_answer && styles.wrongAnswer,
+          ]}
             onPress={() => handleAnswerSelection(item)}
-            disabled={answerSelected} // Disable buttons if an answer is selected
-          />
+            disabled={answerSelected}
+          >
+            <Text style={styles.answerText}>{decode(item)}</Text>
+          </TouchableOpacity>
         )}
       />
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  answerButton: {
+    padding: 10,
+    marginVertical: 5,
+    backgroundColor: "#222",
+    borderRadius: 5,
+  },
+  correctAnswer: {
+    backgroundColor: "green",
+  },
+  wrongAnswer: {
+    backgroundColor: "red",
+  },
+  answerText: {
+    color: "#FFF",
+    textAlign: "center",
+  },
+});
