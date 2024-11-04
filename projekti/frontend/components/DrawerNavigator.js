@@ -9,7 +9,7 @@ export default function DrawerNavigator() {
   return (
     <Drawer.Navigator
       initialRouteName="Home"
-      screenOptions={{ headerTitleAlign: "center" }}
+      screenOptions={{ headerTitleAlign: "center"}}
     >
       <Drawer.Screen name="Home" component={HomeScreen} />
       <Drawer.Screen name="Generate Quiz" component={GenerateQuizScreen} />
