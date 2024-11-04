@@ -3,7 +3,7 @@ import { View, Text, Button } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { getAuth, onAuthStateChanged, signInAnonymously, deleteUser } from 'firebase/auth';
 
-const HomeScreen = () => {
+const KahootHomeScreen = () => {
   const navigation = useNavigation();
   const [user, setUser] = useState(null);
   const auth = getAuth();
@@ -84,4 +84,4 @@ const HomeScreen = () => {
   );
 };
 
-export default HomeScreen;
+export default KahootHomeScreen;

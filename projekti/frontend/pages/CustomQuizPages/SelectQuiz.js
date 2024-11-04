@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, Button, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
-import { db, auth } from '../../../backend/firebase';
-import { collection, query, where, getDocs, addDoc } from 'firebase/firestore';
+import { db, auth } from '../../../backend/firebase/firebase';
+import { collection, query, where, getDocs, addDoc, setDoc, doc } from 'firebase/firestore';
 
 const SelectQuiz = ({ navigation }) => {
   const [quizzes, setQuizzes] = useState([]);
 
-  //fetch quizzes created by the user
+  //fetch quizzes created by the user id
   useEffect(() => {
     const fetchQuizzes = async () => {
       try {
@@ -27,7 +27,7 @@ const SelectQuiz = ({ navigation }) => {
     fetchQuizzes();
   }, []);
 
-
+//choosing quiz creates a lobby
 //create a lobby and navigate to GameScreen where players can join
 const createLobbyAndNavigate = async (quiz) => {
   try {
@@ -40,7 +40,23 @@ const createLobbyAndNavigate = async (quiz) => {
       creatorId: auth.currentUser?.uid,
     });
     console.log('Lobby created with code:', gameCode);
-    navigation.navigate('GameScreen', { gameCode, quizTitle: quiz.quizTitle, gameId: gameDocRef.id });
+
+
+    // adds host as a player in the subcollection, its initializes here for all players
+    // but just incase it exists in the Lobby addPlayerToLobby
+    const playerId = auth.currentUser?.uid;
+    if (playerId) {
+      await setDoc(doc(db, 'games', gameDocRef.id, 'players', playerId), {
+        uid: playerId,
+        displayName: auth.currentUser?.displayName || 'Anonymous',
+        score: 0,
+      });
+      console.log('Player added to the game:', playerId);
+    }
+
+
+
+    navigation.navigate('KahootGameScreen', { gameCode, quizTitle: quiz.quizTitle, gameId: gameDocRef.id });
 
   } catch (error) {
     console.error('Error creating lobby:', error);
