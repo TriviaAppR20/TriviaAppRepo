@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, TextInput, Button, Text, StyleSheet } from 'react-native';
-import { auth } from '../../../backend/firebase';
+import { auth } from '../../backend/firebase/firebase';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 
 const SignUpScreen = ({ navigation }) => {
