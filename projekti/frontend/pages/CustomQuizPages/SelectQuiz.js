@@ -1,30 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, Button, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
 import { db, auth } from '../../../backend/firebase/firebase';
-import { collection, query, where, getDocs, addDoc, setDoc, doc } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, setDoc, doc, onSnapshot } from 'firebase/firestore';
 
 const SelectQuiz = ({ navigation }) => {
   const [quizzes, setQuizzes] = useState([]);
 
   //fetch quizzes created by the user id
   useEffect(() => {
-    const fetchQuizzes = async () => {
-      try {
-        const userId = auth.currentUser?.uid;
-        if (userId) {
-          const q = query(collection(db, 'quizzes'), where('creatorId', '==', userId));
-          const querySnapshot = await getDocs(q);
-          const userQuizzes = querySnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data(),
-          }));
-          setQuizzes(userQuizzes);
-        }
-      } catch (error) {
+    const userId = auth.currentUser?.uid;
+  
+    if (userId) {
+      const q = query(collection(db, 'quizzes'), where('creatorId', '==', userId));
+      
+      const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const userQuizzes = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setQuizzes(userQuizzes);
+      }, (error) => {
         console.error("Error fetching quizzes:", error);
-      }
-    };
-    fetchQuizzes();
+      });
+  
+      // Unsubscribe when the component unmounts
+      return () => unsubscribe();
+    }
   }, []);
 
 //choosing quiz creates a lobby
@@ -63,6 +64,10 @@ const createLobbyAndNavigate = async (quiz) => {
   }
 };
 
+const GenerateQuiz = () => {
+  navigation.navigate('GenerateQuizScreen');
+};
+
 
   return (
     <View style={styles.container}>
@@ -81,7 +86,11 @@ const createLobbyAndNavigate = async (quiz) => {
         <Text>No quizzes available. Create one!</Text>
       )}
       <Button title="Create Quiz" onPress={() => navigation.navigate('CreateQuiz')} />
+
+      <Text>Want to generate quiz with random questions?</Text>
+      <Button title="Generate Random Quiz" onPress={() => navigation.navigate('GenerateQuizKahoot')} />
     </View>
+    
   );
 };
 
