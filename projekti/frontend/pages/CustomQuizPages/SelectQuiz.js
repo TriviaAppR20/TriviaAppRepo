@@ -39,6 +39,7 @@ const createLobbyAndNavigate = async (quiz) => {
       quizId: quiz.id,
       quizTitle: quiz.quizTitle,
       creatorId: auth.currentUser?.uid,
+      roundTime: 20,
     });
     console.log('Lobby created with code:', gameCode);
 
@@ -63,11 +64,6 @@ const createLobbyAndNavigate = async (quiz) => {
     console.error('Error creating lobby:', error);
   }
 };
-
-const GenerateQuiz = () => {
-  navigation.navigate('GenerateQuizScreen');
-};
-
 
   return (
     <View style={styles.container}>
