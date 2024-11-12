@@ -357,6 +357,55 @@ const fetchBestPlayer = async () => {
   //prototype styling exists, but can be modified to fit the final version
   // and is not set in stone....
 
+
+  //this exitgame is copypaste from KahootGameScreen.js
+  //it is used to exit the game, and delete the game from the database
+  //if user if not creator, they will exit and be redirected to the home screen
+  // their uid listing is deletd from the database, this ensures that the game still plays fine
+  // if the creator leaves, the game is deleted from the database
+  const exitGame = async() => {
+    const playerId = auth.currentUser.uid;
+  
+    if (playerId) {
+      try {
+        // First, check if the user is the creator and delete the game if they are
+        const gameDocRef = doc(db, 'games', gameId);
+        const gameDoc = await getDoc(gameDocRef);
+  
+        if (gameDoc.exists()) {
+          const gameData = gameDoc.data();
+          const creatorId = gameData.creatorId;
+  
+          if (playerId === creatorId) {
+            // If the current user is the creator, delete the entire game document
+            await deleteDoc(gameDocRef);
+            console.log('Game deleted:', gameId);
+            navigation.navigate('KahootHomeScreen'); // Redirect after game deletion
+            return; 
+          }
+        } else {
+          console.error('Game document not found:', gameId);
+          return; // Exit if the game document is missing
+        }
+      } catch (error) {
+        console.error('Error while checking/deleting game document:', error.message || error);
+      }
+  
+      // If the user is not the creator, attempt to delete their player document in the subcollection
+      try {
+        const playerDocRef = doc(db, 'games', gameId, 'players', playerId); // Referencing with playerId as document ID
+        await deleteDoc(playerDocRef);
+        console.log(`Player document ${playerId} removed from game ${gameId}`);
+        navigation.navigate('KahootHomeScreen'); // Redirect after player removal
+      } catch (deleteError) {
+        console.error('Error while deleting player document:', deleteError.message || deleteError);
+      }
+    } else {
+      console.error('No player ID found. User may not be authenticated.');
+    }
+  };
+
+
   return (
     <View>
       {!isQuizCompleted ? (
@@ -397,6 +446,7 @@ const fetchBestPlayer = async () => {
           <Text>Percentage: {((score / questions.length) * 100).toFixed(2)}%</Text>
         </View>
       )}
+      <Button title="Exit Game" onPress={exitGame} />
     </View>
   );
 };
