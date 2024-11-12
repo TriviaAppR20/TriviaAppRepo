@@ -54,11 +54,11 @@ const createLobbyAndNavigate = async (quiz) => {
         score: 0,
       });
       console.log('Player added to the game:', playerId);
-    }
+    } 
 
 
 
-    navigation.navigate('KahootGameScreen', { gameCode, quizTitle: quiz.quizTitle, gameId: gameDocRef.id });
+    navigation.navigate('KahootGameScreen', { gameCode, quizTitle: quiz.quizTitle, gameId: gameDocRef.id, creatorId: playerId});
 
   } catch (error) {
     console.error('Error creating lobby:', error);

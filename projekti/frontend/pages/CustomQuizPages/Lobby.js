@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, Button, TextInput, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { getFirestore, collection, query, where, onSnapshot, addDoc } from 'firebase/firestore';
+import { getFirestore, collection, query, where, onSnapshot, addDoc, setDoc, doc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 
 const Lobby = () => {
@@ -26,7 +26,7 @@ const Lobby = () => {
 
   const addPlayerToLobby = async (gameId, playerId, playerName) => {
     try {
-      await addDoc(collection(db, 'games', gameId, 'players'), {
+      await setDoc(doc(db, 'games', gameId, 'players', playerId), {
         playerId,
         playerName,
         joinedAt: new Date(),
