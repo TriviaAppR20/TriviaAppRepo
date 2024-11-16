@@ -4,6 +4,7 @@ import { auth } from './backend/firebase/firebase';
 import { NavigationContainer } from "@react-navigation/native";
 import StackNavigator from "./frontend/components/StackNavigator";
 import { signInAnonymously, deleteUser } from 'firebase/auth';
+import { DarkModeProvider } from './frontend/pages/DarkModeContext';
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -43,8 +44,10 @@ export default function App() {
   }, []);
 
   return (
-    <NavigationContainer>
-      <StackNavigator />
-    </NavigationContainer>
+    <DarkModeProvider>
+      <NavigationContainer>
+        <StackNavigator />
+      </NavigationContainer>
+    </DarkModeProvider>
   );
 }

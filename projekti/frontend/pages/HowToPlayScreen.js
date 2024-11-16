@@ -1,7 +1,12 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { DarkModeContext } from './DarkModeContext';
 
 const HowToPlayScreen = () => {
+    const { isDarkMode } = useContext(DarkModeContext);
+
+    const styles = isDarkMode ? darkStyles : lightStyles;
+
     return (
         <View style={styles.container}>
             <Text style={styles.title}>How to Play</Text>
@@ -20,8 +25,7 @@ const HowToPlayScreen = () => {
             </View>
             <View style={styles.stepContainer}>
                 <Text style={styles.step}>
-                    3. If you choose to generate your own quiz, you can select write your own questions and answers. Once your quiz is completed, you will receive a code
-                    which you can share with anyone so they can join and play your quiz.
+                    3. If you choose to generate your own quiz, you can select the number of questions, categories, and difficulty level.
                 </Text>
             </View>
             <View style={styles.stepContainer}>
@@ -41,22 +45,19 @@ const HowToPlayScreen = () => {
     );
 };
 
-const styles = StyleSheet.create({
+const commonStyles = {
     container: {
         flex: 1,
         padding: 20,
-        backgroundColor: '#fff',
     },
     title: {
         fontSize: 28,
         fontWeight: 'bold',
-        color: '#333',
         marginBottom: 20,
         textAlign: 'center',
     },
     instructions: {
         fontSize: 18,
-        color: '#666',
         marginBottom: 20,
         textAlign: 'center',
     },
@@ -70,13 +71,64 @@ const styles = StyleSheet.create({
     },
     step: {
         fontSize: 16,
-        color: '#333',
     },
     conclusion: {
         fontSize: 18,
-        color: '#666',
         marginTop: 20,
         textAlign: 'center',
+    },
+};
+
+const lightStyles = StyleSheet.create({
+    ...commonStyles,
+    container: {
+        ...commonStyles.container,
+        backgroundColor: '#fff',
+    },
+    title: {
+        ...commonStyles.title,
+        color: '#333',
+    },
+    instructions: {
+        ...commonStyles.instructions,
+        color: '#666',
+    },
+    step: {
+        ...commonStyles.step,
+        color: '#333',
+    },
+    conclusion: {
+        ...commonStyles.conclusion,
+        color: '#666',
+    },
+});
+
+const darkStyles = StyleSheet.create({
+    ...commonStyles,
+    container: {
+        ...commonStyles.container,
+        backgroundColor: '#121212',
+    },
+    title: {
+        ...commonStyles.title,
+        color: '#fff',
+    },
+    instructions: {
+        ...commonStyles.instructions,
+        color: '#ccc',
+    },
+    stepContainer: {
+        ...commonStyles.stepContainer,
+        backgroundColor: '#333',
+        borderColor: '#555',
+    },
+    step: {
+        ...commonStyles.step,
+        color: '#fff',
+    },
+    conclusion: {
+        ...commonStyles.conclusion,
+        color: '#ccc',
     },
 });
 
