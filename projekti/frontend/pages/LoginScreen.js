@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, Button } from 'react-native';
 import { auth } from '../../backend/firebase/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 const LoginScreen = () => {
   const navigation = useNavigation();
@@ -13,7 +15,10 @@ const LoginScreen = () => {
 
   const handleLogin = async () => {
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      await AsyncStorage.setItem('email', email);
+      await AsyncStorage.setItem('password', password);
+      console.log("email/password Logged in:", userCredential.user.uid);
       navigation.navigate('SelectQuiz') 
     } catch (error) {
       console.error("Login error:", error);
