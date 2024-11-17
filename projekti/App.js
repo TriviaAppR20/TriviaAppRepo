@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { auth } from './backend/firebase/firebase';
 import { NavigationContainer } from "@react-navigation/native";
 import StackNavigator from "./frontend/components/StackNavigator";
+import { DarkModeProvider } from './frontend/pages/DarkModeContext';
 import { 
   signInAnonymously, 
   onAuthStateChanged, 
@@ -176,8 +177,10 @@ export default function App() {
 
   //user is passed as a prop
   return (
+    <DarkModeProvider>
     <NavigationContainer>
       <StackNavigator user={user} />
     </NavigationContainer>
+    </DarkModeProvider>
   );
 }
