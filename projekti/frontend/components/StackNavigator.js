@@ -10,6 +10,7 @@ import QuizzScreen from '../pages/CustomQuizPages/QuizzScreen';
 import CreateQuiz from '../pages/CustomQuizPages/CreateQuiz';
 import SignUpScreen from '../pages/SignUpScreen';
 import GenerateQuizKahoot from '../pages/CustomQuizPages/GenerateQuizKahoot';
+import SettingsScreen from '../pages/SettingsScreen';
 
 const Stack = createNativeStackNavigator()
 
@@ -34,6 +35,7 @@ export default function StackNavigator() {
       <Stack.Screen name="CreateQuiz" component={CreateQuiz} />
       <Stack.Screen name="SignUpScreen" component={SignUpScreen} />
       <Stack.Screen name="GenerateQuizKahoot" component={GenerateQuizKahoot} />
+      <Stack.Screen name="Settings" component={SettingsScreen} />
     </Stack.Navigator>
   )
 }
