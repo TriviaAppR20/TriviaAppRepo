@@ -3,6 +3,8 @@ import { createDrawerNavigator } from "@react-navigation/drawer";
 import HomeScreen from "../pages/HomeScreen";
 import GenerateQuizScreen from "../pages/GenerateQuizScreen";
 import AboutScreen from "../pages/AboutScreen";
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import { useNavigation } from '@react-navigation/native';
 import HowToPlayScreen from "../pages/HowToPlayScreen";
 import DarkMode from "../pages/DarkMode";
 import { DarkModeContext } from '../pages/DarkModeContext';
@@ -11,6 +13,7 @@ import { StatusBar } from 'react-native';
 const Drawer = createDrawerNavigator();
 
 export default function DrawerNavigator() {
+  const navigation = useNavigation();
   const { isDarkMode } = useContext(DarkModeContext);
 
   const styles = isDarkMode ? darkStyles : lightStyles;
@@ -25,7 +28,16 @@ export default function DrawerNavigator() {
         drawerActiveTintColor: styles.activeTintColor,
         drawerStyle: styles.drawerStyle,
         headerStyle: styles.headerStyle,
-        headerTintColor: styles.headerTintColor
+        headerTintColor: styles.headerTintColor,
+        headerRight: () => (
+          <Icon
+            name="settings"
+            size={24}
+            color={isDarkMode ? "#fff" : "#000"}
+            style={{ marginRight: 15 }}
+            onPress={() => navigation.navigate("Settings")}
+          />
+        ),
       }}
     >
       <Drawer.Screen name="Home" component={HomeScreen} />
