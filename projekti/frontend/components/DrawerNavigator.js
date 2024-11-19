@@ -6,22 +6,26 @@ import AboutScreen from "../pages/AboutScreen";
 import HowToPlayScreen from "../pages/HowToPlayScreen";
 import DarkMode from "../pages/DarkMode";
 import { DarkModeContext } from '../pages/DarkModeContext';
+import { StatusBar } from 'react-native';
 
 const Drawer = createDrawerNavigator();
 
 export default function DrawerNavigator() {
   const { isDarkMode } = useContext(DarkModeContext);
 
-  const drawerStyles = isDarkMode ? darkDrawerStyles : lightDrawerStyles;
+  const styles = isDarkMode ? darkStyles : lightStyles;
 
   return (
     <Drawer.Navigator
       initialRouteName="Home"
       screenOptions={{
         headerTitleAlign: "center",
-        drawerInactiveTintColor: drawerStyles.inactiveTintColor,
-        drawerActiveTintColor: drawerStyles.activeTintColor,
-        drawerStyle: drawerStyles.drawerStyle,
+        swipeEnabled: false, // Disables drawer opening by swiping, only opens on burger menu icon press
+        drawerInactiveTintColor: styles.inactiveTintColor,
+        drawerActiveTintColor: styles.activeTintColor,
+        drawerStyle: styles.drawerStyle,
+        headerStyle: styles.headerStyle,
+        headerTintColor: styles.headerTintColor
       }}
     >
       <Drawer.Screen name="Home" component={HomeScreen} />
@@ -33,18 +37,30 @@ export default function DrawerNavigator() {
   );
 }
 
-const lightDrawerStyles = {
+const lightStyles = {
   inactiveTintColor: "#001011ff",
   activeTintColor: "#001011ff",
   drawerStyle: {
     backgroundColor: '#fff',
   },
+  headerStyle: {
+    backgroundColor: "#FFF",
+    elevation: 20,
+    shadowColor: "#f87609",
+  },
+  headerTintColor: "#000",
 };
 
-const darkDrawerStyles = {
+const darkStyles = {
   inactiveTintColor: "#ffffff",
   activeTintColor: "#ffffff",
   drawerStyle: {
     backgroundColor: '#121212',
   },
+  headerStyle: {
+    backgroundColor: "#000",
+    elevation: 20,
+    shadowColor: "#f87609",
+  },
+  headerTintColor: "#FFF",
 };
