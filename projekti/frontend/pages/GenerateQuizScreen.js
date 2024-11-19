@@ -1,17 +1,17 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import {
   View,
   Text,
   StyleSheet,
   Alert,
   TouchableOpacity,
-  Switch,
   Modal,
-  StatusBar,
 } from "react-native";
 import Slider from "@react-native-community/slider";
-import { Picker } from "@react-native-picker/picker";
+import CustomPicker from "../components/CustomPicker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { DarkModeContext } from "./DarkModeContext";
+import { StatusBar } from "react-native";
 
 export default function GenerateQuizScreen({ navigation }) {
   const [categories, setCategories] = useState([]);
@@ -20,9 +20,9 @@ export default function GenerateQuizScreen({ navigation }) {
   const [difficulty, setDifficulty] = useState("");
   const [type, setType] = useState("");
   const [apiSessionToken, setApiSessionToken] = useState("");
-  const [useToken, setUseToken] = useState(false);
-  const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [isTokenEmpty, setIsTokenEmpty] = useState(false);
+
+  const { isDarkMode } = useContext(DarkModeContext);
 
   const fetchCategories = async () => {
     try {
@@ -34,6 +34,7 @@ export default function GenerateQuizScreen({ navigation }) {
     }
   };
 
+  // Fetches a new API session token and returns it
   const fetchApiSessionToken = async () => {
     try {
       const response = await fetch(
@@ -56,6 +57,7 @@ export default function GenerateQuizScreen({ navigation }) {
     }
   };
 
+  // Requests the api to reset the current API session token
   const resetApiSessionToken = async () => {
     try {
       const response = await fetch(
@@ -64,7 +66,7 @@ export default function GenerateQuizScreen({ navigation }) {
       const data = await response.json();
       if (data.response_code === 0) {
         Alert.alert("Reset successful!");
-        hideTokenEmpty()
+        hideTokenEmpty();
       } else {
         Alert.alert("Error. Something went wrong while resetting the token");
       }
@@ -75,10 +77,18 @@ export default function GenerateQuizScreen({ navigation }) {
 
   const getApiSessionToken = async () => {
     try {
+      // Get existing token from async storage and make a test query to the api with it
       const existingToken = await AsyncStorage.getItem("API-Token");
-      if (existingToken !== null) {
+      const response = await fetch(
+        `https://opentdb.com/api.php?amount=5&token=${existingToken}`
+      );
+      const data = await response.json();
+      // If there was an existing token in async storage and the API doesn't return code 3 (token does not exist)
+      if (existingToken !== null && data.response_code !== 3) {
+        // Then we set the state variable to the existing token
         setApiSessionToken(existingToken);
       } else {
+        // Else we request a new token from the API and save that in state as well as async storage
         const token = await fetchApiSessionToken();
         await AsyncStorage.setItem("API-Token", token);
         setApiSessionToken(token);
@@ -96,8 +106,7 @@ export default function GenerateQuizScreen({ navigation }) {
     if (category) queryParams.push(`category=${category}`);
     if (difficulty) queryParams.push(`difficulty=${difficulty}`);
     if (type) queryParams.push(`type=${type}`);
-    if (apiSessionToken && useToken)
-      queryParams.push(`token=${apiSessionToken}`);
+    if (apiSessionToken) queryParams.push(`token=${apiSessionToken}`);
 
     const queryUrl = `${apiUrl}?${queryParams.join("&")}`;
     return queryUrl;
@@ -115,34 +124,40 @@ export default function GenerateQuizScreen({ navigation }) {
   };
 
   const generateQuiz = async () => {
-    const data = await fetchQuestions();
-    if (data.response_code === 0) {
-      navigation.navigate("Game", { questions: data.results });
-    } else if (data.response_code === 4) {
-      showTokenEmpty()
-    } else {
-      let errorMessage = "";
-
-      switch (data.response_code) {
-        case 1:
-          errorMessage =
-            "No Results: Could not return results. The API doesn't have enough questions for your query (e.g., asking for 50 questions in a category that only has 20).";
-          break;
-        case 2:
-          errorMessage =
-            "Invalid Parameter: Contains an invalid parameter. Arguments passed aren't valid (e.g., Amount = 'Five' instead of a number).";
-          break;
-        case 3:
-          errorMessage = "Token Not Found: Session Token does not exist.";
-          break;
-        case 5:
-          errorMessage =
-            "Rate Limit Exceeded: Too many requests. Each IP can only access the API once every 5 seconds.";
-          break;
-        default:
-          errorMessage = "An unknown error occurred.";
+    try {
+      const data = await fetchQuestions();
+      if (data.response_code === 0) {
+        navigation.navigate("Game", { questions: data.results });
+      } 
+      else if (data.response_code === 4) {
+        showTokenEmpty();
       }
-      Alert.alert("Error", errorMessage, [{ text: "OK" }]);
+      else {
+        let errorMessage = "";
+
+        switch (data.response_code) {
+          case 1:
+            errorMessage =
+              "No Results: Could not return results. The API doesn't have enough questions for your query (e.g., asking for 50 questions in a category that only has 20).";
+            break;
+          case 2:
+            errorMessage =
+              "Invalid Parameter: Contains an invalid parameter. Arguments passed aren't valid (e.g., Amount = 'Five' instead of a number).";
+            break;
+          case 3:
+            errorMessage = "Token Not Found: Session Token does not exist.";
+            break;
+          case 5:
+            errorMessage =
+              "Rate Limit Exceeded: Too many requests. Each IP can only access the API once every 5 seconds.";
+            break;
+          default:
+            errorMessage = "An unknown error occurred.";
+        }
+        Alert.alert("Error", errorMessage, [{ text: "OK" }]);
+      }
+    } catch (err) {
+      console.error(`An error occured: ${err}`);
     }
   };
 
@@ -151,164 +166,120 @@ export default function GenerateQuizScreen({ navigation }) {
     getApiSessionToken();
   }, []);
 
-  const showInfo = () => {
-    setIsInfoOpen(true);
-    StatusBar.setBackgroundColor("rgba(0, 0, 0, 0.7)");
-  };
-  const hideInfo = () => {
-    setIsInfoOpen(false);
-    StatusBar.setBackgroundColor("#FFF");
-  };
-
   const showTokenEmpty = () => {
-    setIsTokenEmpty(true)
-    StatusBar.setBackgroundColor("#rgba(0, 0, 0, 0.7)");
-  }
+    setIsTokenEmpty(true);
+    StatusBar.setBackgroundColor(isDarkMode ? "#000" : "rgba(0,0,0,0.7)");
+  };
   const hideTokenEmpty = () => {
-    setIsTokenEmpty(false)
-    StatusBar.setBackgroundColor("#FFF");
-  }
+    setIsTokenEmpty(false);
+    StatusBar.setBackgroundColor(isDarkMode ? "#000" : "#FFF");
+  };
 
   return (
-    <View style={styles.page}>
+    <View style={[styles.page, isDarkMode && dark.page]}>
       <Modal
-        visible={isInfoOpen}
+        visible={isTokenEmpty}
         transparent={true}
-        animationType="fade"
-        onRequestClose={hideInfo}
+        onRequestClose={hideTokenEmpty}
       >
         <View style={styles.modalFull}>
-          <View style={styles.modalContainer}>
-            <Text style={{ fontSize: 16 }}>
-              When the switch is toggled on, the app will make sure that you are
-              not asked the same questions multiple times, even if you close the
-              app and come back!
+          <View style={[styles.modalContainer, { height: "40%" }]}>
+            <Text style={{ fontSize: 16, marginBottom: 8 }}>
+              The app has ran out of new questions to ask you with these
+              specific options. Would you like to reset your token?
             </Text>
-            <View>
-              <Text style={{ marginBottom: 8, fontSize: 16 }}>
-                This is a manual reset button. If you click this you may get the
-                same questions again. Automatic resets happen after 6 hours of
-                inactivity. If the app detects it has ran out of questions to
-                ask you based on the options you provided you will be asked if
-                you want to reset.
-              </Text>
-              <TouchableOpacity
-                style={styles.resetButton}
-                onPress={resetApiSessionToken}
-              >
-                <Text style={{ color: "#FFF" }}>RESET</Text>
-              </TouchableOpacity>
-            </View>
-            <TouchableOpacity style={styles.closeInfoButton} onPress={hideInfo}>
+            <TouchableOpacity
+              style={styles.resetButton}
+              onPress={resetApiSessionToken}
+            >
+              <Text style={{ color: "#FFF" }}>RESET</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.closeInfoButton}
+              onPress={hideTokenEmpty}
+            >
               <Text style={{ color: "#FFF" }}>Close</Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
 
-      <Modal
-        visible={isTokenEmpty}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={hideTokenEmpty}
-      >
-        <View style={styles.modalFull}>
-          <View style={[styles.modalContainer, {height:"40%"}]}>
-            <Text style={{fontSize:16, marginBottom:8}}>
-              The app has ran out of new questions to ask you with these specific options.
-              Would you like to reset your token?
-            </Text>
-            <TouchableOpacity style={styles.resetButton} onPress={resetApiSessionToken}>
-              <Text style={{color:"#FFF"}}>RESET</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.closeInfoButton} onPress={hideTokenEmpty}>
-              <Text style={{color:"#FFF"}}>Close</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-
-      <Text style={styles.genericLabel}>Number of questions</Text>
+      <Text style={[styles.genericLabel, isDarkMode && dark.genericLabel]}>
+        Number of questions
+      </Text>
       <View style={styles.sliderContainer}>
-        <Text style={styles.sliderLabel}>{amountOfQuestions}</Text>
+        <Text style={[styles.sliderLabel, isDarkMode && dark.sliderLabel]}>
+          {amountOfQuestions}
+        </Text>
         <Slider
           style={styles.slider}
           minimumValue={5}
           maximumValue={50}
           step={1}
           value={amountOfQuestions}
-          onValueChange={(value) => setAmountOfQuestions(value)}
-          minimumTrackTintColor="#001011ff"
-          maximumTrackTintColor="#666"
-          thumbTintColor="#444"
+          onSlidingComplete={(value) => setAmountOfQuestions(value)}
+          minimumTrackTintColor={"#f87609"}
+          maximumTrackTintColor={"#f87609"}
+          thumbTintColor={"#f87609"}
         />
       </View>
 
-      <Text style={styles.genericLabel}>Category</Text>
-      <Picker
+      <Text style={[styles.genericLabel, isDarkMode && dark.genericLabel]}>
+        Category
+      </Text>
+      <CustomPicker
+        items={[
+          { label: "Any category", value: "" },
+          ...categories.map((cat) => ({
+            label: cat.name,
+            value: cat.id,
+          })),
+        ]}
         selectedValue={category}
-        onValueChange={(itemValue) => {
-          setCategory(itemValue);
-        }}
-        style={styles.picker}
-      >
-        <Picker.Item label="All categories" value={""} />
-        {categories.map((category) => (
-          <Picker.Item
-            key={category.id}
-            label={category.name}
-            value={category.id}
-          />
-        ))}
-      </Picker>
+        onSelect={(value) => setCategory(value)}
+        styles={[pickerStyles, isDarkMode ? darkPickerStyles : {}]}
+        iconColor={isDarkMode ? "white" : "black"}
+      />
 
-      <Text style={styles.genericLabel}>Difficulty</Text>
-      <Picker
+      <Text style={[styles.genericLabel, isDarkMode && dark.genericLabel]}>
+        Difficulty
+      </Text>
+      <CustomPicker
+        items={[
+          { label: "Any difficulty", value: "" },
+          { label: "Easy", value: "easy" },
+          { label: "Medium", value: "medium" },
+          { label: "Hard", value: "hard" },
+        ]}
         selectedValue={difficulty}
-        onValueChange={(itemValue) => {
-          setDifficulty(itemValue);
-        }}
-        style={styles.picker}
-      >
-        <Picker.Item label="Any difficulty" value={""} />
-        <Picker.Item label="Easy" value={"easy"} />
-        <Picker.Item label="Medium" value={"medium"} />
-        <Picker.Item label="Hard" value={"hard"} />
-      </Picker>
+        onSelect={(value) => setDifficulty(value)}
+        styles={[pickerStyles, isDarkMode ? darkPickerStyles : {}]}
+        iconColor={isDarkMode ? "white" : "black"}
+      />
 
-      <Text style={styles.genericLabel}>Question type</Text>
-      <Picker
+      <Text style={[styles.genericLabel, isDarkMode && dark.genericLabel]}>
+        Question type
+      </Text>
+      <CustomPicker
+        items={[
+          { label: "Any type", value: "" },
+          { label: "Multiple choice", value: "multiple" },
+          { label: "True / False", value: "boolean" },
+        ]}
         selectedValue={type}
-        onValueChange={(itemValue) => {
-          setType(itemValue);
-        }}
-        style={styles.picker}
-      >
-        <Picker.Item label="Any type" value={""} />
-        <Picker.Item label="Multiple choice" value={"multiple"} />
-        <Picker.Item label="True / False" value={"boolean"} />
-      </Picker>
+        onSelect={(value) => setType(value)}
+        styles={[pickerStyles, isDarkMode ? darkPickerStyles : {}]}
+        iconColor={isDarkMode ? "white" : "black"}
+      />
 
-      <View style={{ display: "flex", flexDirection: "row" }}>
-        <Text style={styles.genericLabel}>Avoid asking same questions? </Text>
-        <TouchableOpacity onPress={showInfo}>
-          <Text style={{ fontStyle: "italic" }}>ⓘ</Text>
-        </TouchableOpacity>
-      </View>
-
-      <Switch
-        style={{ margin: 0 }}
-        trackColor={{ false: "red", true: "green" }}
-        value={useToken}
-        onValueChange={() => setUseToken((prev) => !prev)}
-      ></Switch>
-
-      <Text>{generateQueryUrl()}</Text>
+      <Text style={{ color: "white" }}>{generateQueryUrl()}</Text>
       <TouchableOpacity
-        style={styles.startButton}
+        style={[styles.startButton, isDarkMode && dark.startButton]}
         onPress={() => generateQuiz()}
       >
-        <Text style={styles.buttonText}>Start Quiz</Text>
+        <Text style={[styles.buttonText, isDarkMode && dark.buttonText]}>
+          Start Quiz
+        </Text>
       </TouchableOpacity>
     </View>
   );
@@ -321,14 +292,14 @@ const styles = StyleSheet.create({
     justifyContent: "start",
     alignItems: "center",
     padding: 24,
-    backgroundColor: "#EEE",
+    backgroundColor: "#EDEDED",
   },
   modalFull: {
     flex: 1,
+    backgroundColor: "rgba(0,0,0,0.7)",
     justifyContent: "center",
     alignItems: "center",
     padding: 32,
-    backgroundColor: "rgba(0, 0, 0, 0.7)",
   },
   modalContainer: {
     width: "100%",
@@ -357,7 +328,7 @@ const styles = StyleSheet.create({
   },
   genericLabel: {
     marginBottom: 8,
-    color: "#001011ff",
+    color: "#000",
   },
   sliderContainer: {
     display: "flex",
@@ -388,14 +359,63 @@ const styles = StyleSheet.create({
   startButton: {
     paddingVertical: 18,
     paddingHorizontal: 38,
-    borderWidth: 3,
+    borderWidth: 1,
     borderRadius: 24,
-    borderColor: "#001011ff",
-    backgroundColor: "#001011ff",
+    borderColor: "#f87609",
+    backgroundColor: "#FFF",
   },
   buttonText: {
     fontSize: 16,
-    fontWeight: "500",
+    fontWeight: 400,
+    color: "#f87609",
+  },
+});
+
+const pickerStyles = StyleSheet.create({
+  button: {
+    marginBottom: 32,
+    borderWidth: 1,
+    borderColor: "#f87609",
+  },
+  item: {
+    backgroundColor: "#FFF",
+  },
+  itemText: {
+    color: "#000",
+  },
+});
+const darkPickerStyles = StyleSheet.create({
+  button: {
+    backgroundColor: "#000",
+    borderColor: "#f87609",
+  },
+  buttonText: {
+    color: "#FFF",
+  },
+  item: {
+    backgroundColor: "#000",
+  },
+  itemText: {
+    color: "#FFF",
+  },
+});
+
+const dark = StyleSheet.create({
+  page: {
+    backgroundColor: "#121212",
+  },
+  genericLabel: {
+    color: "#FFF",
+  },
+  startButton: {
+    borderColor: "#f87609",
+    backgroundColor: "#000",
+    borderWidth: 1,
+  },
+  buttonText: {
+    color: "#f87609",
+  },
+  sliderLabel: {
     color: "#FFF",
   },
 });
