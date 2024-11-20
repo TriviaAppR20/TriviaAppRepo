@@ -8,10 +8,10 @@ const Lobby = () => {
   const navigation = useNavigation();
   const [gameCode, setGameCode] = useState('');
   const [lobbyData, setLobbyData] = useState(null);
+  const [anonymousName, setAnonymousName] = useState('');
+  const [isChoosingName, setIsChoosingName] = useState(false); // Tracks if name input is needed
   const db = getFirestore();
   const auth = getAuth();
-
-
 
   // Join the lobby with the given game code
   // adds players data to the game subcollection 'players'
@@ -40,6 +40,14 @@ const Lobby = () => {
 
  
 
+
+  //Tries to join game lobby
+  //checks if the game has not started
+  //if user is anonymous, checks if name is chosen
+  //if all conditions are met, user is added to the lobby
+
+  //structure for the name cheking is not great probably
+  //as it re runs the function, but it works for now
   const handleJoinLobby = () => {
     const q = query(collection(db, 'games'), where('gameCode', '==', gameCode));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
@@ -47,26 +55,29 @@ const Lobby = () => {
         const lobbyDoc = querySnapshot.docs[0];
         setLobbyData({ id: lobbyDoc.id, ...lobbyDoc.data() });
         console.log('Lobby data fetched:', lobbyDoc.data());
-  
-        // Get game status to check if it has started
+
         const gameStatus = lobbyDoc.data().status;
-  
-        // Check if the current user is authenticated
         const currentUser = auth.currentUser;
+
         if (currentUser) {
-          // If game has not started, add player to lobby, started games cannot be joined
           if (gameStatus !== 'started') {
-            addPlayerToLobby(lobbyDoc.id, currentUser.uid, currentUser.email || 'Anonymous');
-  
-            // Unsubscribe from the listener before navigating, this kept readding players later
-            unsubscribe();
-  
-            // Navigate to the KahootGameScreen only once the user has joined
-            navigation.navigate('KahootGameScreen', {
-              gameCode: lobbyDoc.data().gameCode,
-              quizTitle: lobbyDoc.data().quizTitle,
-              gameId: lobbyDoc.id,
-            });
+            // If anonymous, ensure name is chosen
+            if (currentUser.isAnonymous && !anonymousName.trim()) {
+              setIsChoosingName(true);
+              unsubscribe(); // Stop listening while name is chosen
+            } else {
+              const playerName = currentUser.isAnonymous
+                ? anonymousName
+                : currentUser.email;
+              addPlayerToLobby(lobbyDoc.id, currentUser.uid, playerName);
+
+              unsubscribe();
+              navigation.navigate('KahootGameScreen', {
+                gameCode: lobbyDoc.data().gameCode,
+                quizTitle: lobbyDoc.data().quizTitle,
+                gameId: lobbyDoc.id,
+              });
+            }
           } else {
             console.warn('Game has already started. Cannot join.');
             alert('The game has already started. You cannot join at this time.');
@@ -79,23 +90,44 @@ const Lobby = () => {
         alert('Invalid game code!');
       }
     });
-  
-    // Return the unsubscribe function for cleanup
+
     return unsubscribe;
   };
-  
+
+  const handleSaveNameAndJoin = () => {
+    if (anonymousName.trim()) {
+      setIsChoosingName(false);
+      handleJoinLobby(); // Retry joining after name is set
+    } else {
+      Alert.alert('Error', 'Please enter a valid name.');
+    }
+  };
   
 
   return (
     <View style={styles.container}>
-      <Text>Lobby</Text>
-      <TextInput
-        placeholder="Enter game code"
-        value={gameCode}
-        onChangeText={setGameCode}
-        style={styles.input}
-      />
-      <Button title="Join Lobby" onPress={handleJoinLobby} />
+      <Text style={styles.header}>Lobby</Text>
+      {isChoosingName ? (
+        <>
+          <TextInput
+            placeholder="Choose your name"
+            value={anonymousName}
+            onChangeText={setAnonymousName}
+            style={styles.input}
+          />
+          <Button title="Save Name & Join Lobby" onPress={handleSaveNameAndJoin} />
+        </>
+      ) : (
+        <>
+          <TextInput
+            placeholder="Enter game code"
+            value={gameCode}
+            onChangeText={setGameCode}
+            style={styles.input}
+          />
+          <Button title="Join Lobby" onPress={handleJoinLobby} />
+        </>
+      )}
       {lobbyData && (
         <View>
           <Text>Lobby Data:</Text>
@@ -108,6 +140,7 @@ const Lobby = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 20 },
+  header: { fontSize: 24, marginBottom: 20 },
   input: { height: 40, borderColor: 'gray', borderWidth: 1, marginBottom: 12, paddingHorizontal: 8 },
 });
 

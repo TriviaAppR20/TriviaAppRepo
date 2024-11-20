@@ -28,10 +28,19 @@ const SelectQuiz = ({ navigation }) => {
     }
   }, []);
 
+
+
+  // console.log("Current User:", auth.currentUser);
+  console.log("Display Name:", auth.currentUser?.displayName);
+  
+
 //choosing quiz creates a lobby
 //create a lobby and navigate to GameScreen where players can join
 const createLobbyAndNavigate = async (quiz) => {
   try {
+    // Reload user to ensure the displayName is up-to-date
+    await auth.currentUser.reload();
+
     const gameCode = Math.floor(100000 + Math.random() * 900000).toString(); // Generate game code
     const gameDocRef = await addDoc(collection(db, 'games'), {
       gameCode: gameCode,
@@ -43,23 +52,24 @@ const createLobbyAndNavigate = async (quiz) => {
     });
     console.log('Lobby created with code:', gameCode);
 
-
-    // adds host as a player in the subcollection, its initializes here for all players
-    // but just incase it exists in the Lobby addPlayerToLobby
+    // Add host to players subcollection with updated displayName
     const playerId = auth.currentUser?.uid;
+    const playerName = auth.currentUser?.displayName || 'Anonymous';
     if (playerId) {
       await setDoc(doc(db, 'games', gameDocRef.id, 'players', playerId), {
         uid: playerId,
-        displayName: auth.currentUser?.displayName || 'Anonymous',
+        playerName: playerName,
         score: 0,
       });
-      console.log('Player added to the game:', playerId);
-    } 
+      console.log('Player added to the game:', playerId, playerName);
+    }
 
-
-
-    navigation.navigate('KahootGameScreen', { gameCode, quizTitle: quiz.quizTitle, gameId: gameDocRef.id, creatorId: playerId});
-
+    navigation.navigate('KahootGameScreen', {
+      gameCode,
+      quizTitle: quiz.quizTitle,
+      gameId: gameDocRef.id,
+      creatorId: playerId,
+    });
   } catch (error) {
     console.error('Error creating lobby:', error);
   }

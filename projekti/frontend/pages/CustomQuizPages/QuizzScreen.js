@@ -323,19 +323,20 @@ const deleteGame = async () => {
 const fetchBestPlayer = async () => {
   setLoadingBestPlayer(true);
   if (!gameId) return;
+
   try {
     const playersRef = collection(db, "games", gameId, "players");
     const snapshot = await getDocs(playersRef);
-    let bestScore = -1; //initialize
-    let bestPlayerData = null; //these
+    let bestScore = -1;
+    let bestPlayerData = null;
 
-    //loop through all players and compare their scores
+    // Loop through all players and compare their scores
     snapshot.forEach((doc) => {
       const data = doc.data();
       if (data.finalScore !== undefined && data.finalScore > bestScore) {
         bestScore = data.finalScore;
         bestPlayerData = {
-          uid: data.uid,
+          playerName: data.playerName || "Anonymous", // Use playerName or fallback to 'Anonymous'
           finalScore: data.finalScore,
           percentageScore: (data.finalScore / questions.length) * 100,
         };
@@ -349,6 +350,7 @@ const fetchBestPlayer = async () => {
     setLoadingBestPlayer(false);
   }
 };
+
 
   //return has conditions for showing questions, answers, and the correct answer
   //and the end screen and so forth.
@@ -435,7 +437,7 @@ const fetchBestPlayer = async () => {
             <Text>Loading results...</Text>
           ) : bestPlayer ? (
             <>
-              <Text>The BEST player was: {bestPlayer.uid}</Text>
+              <Text>The BEST player was: {bestPlayer.playerName}</Text>
               <Text>Final Score: {bestPlayer.finalScore}</Text>
               <Text>with a Percentage Score: {bestPlayer.percentageScore.toFixed(2)}%</Text>
             </>

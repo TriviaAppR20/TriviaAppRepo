@@ -9,37 +9,26 @@ const KahootHomeScreen = () => {
   const auth = getAuth();
 
 
-
-
-
     //this screen was used for prototyping and navigation testing
-
     //easily reusable code if needed.
 
 
 
-
-
-
-
     //create "lobby", checks if user is logged in, if not, redirects to login
-  const handleCreateLobby = () => {
-    onAuthStateChanged(auth, (user) => {
+    const handleCreateLobby = () => {
+      const user = auth.currentUser;
       if (user) {
-        if (user.isAnonymous){
-          navigation.navigate('Login', { redirect: 'LoginScreen' });
+        if (user.isAnonymous) {
           alert("Please log in to create a lobby.");
-        }
-         else {
+          navigation.navigate('Login', { redirect: 'LoginScreen' });
+        } else {
           console.log("non anonymous");
           navigation.navigate('SelectQuiz', { redirect: 'SelectQuiz' });
         }
       } else {
-        console.log("No user detected. Redirecting to Login.");
-        navigation.navigate('Login', { redirect: 'SelectQuiz' });
-      }});
-  };
-
+        console.log("No user detected.");
+      }
+    };
   //handles join lobby and directs to screen where code can be entered
   const handleJoinLobby = () => {
     navigation.navigate('Lobby', { join: true });
