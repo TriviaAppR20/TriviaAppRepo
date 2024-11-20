@@ -57,7 +57,7 @@ export default function App() {
           if (auth.currentUser) {
             if (auth.currentUser.isAnonymous) {
               // Delete anonymous user session
-              await deleteUser(auth.currentUser);
+              await deleteUser(auth.currentUser); 
               console.log("Old anonymous user deleted after inactivity.");
             } else {
               // Log out email/password user

@@ -22,18 +22,17 @@ import { doc, updateDoc, collection, getDocs, onSnapshot, getDoc, deleteDoc, arr
 const KahootGameScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const { gameCode, quizTitle, gameId } = route.params;
+  const { gameCode, quizTitle, gameId, creatorId } = route.params;
   const [players, setPlayers] = useState([]);
   const [countdown, setCountdown] = useState(null);
-  const [countdownStarted, setCountdownStarted] = useState(false);
+ // const [countdownStarted, setCountdownStarted] = useState(false);
   const [gameStarted, setGameStarted] = useState(false);
   const [isHost, setIsHost] = useState(false);
 
 
   // Fetch players once when component mounts
 
-  // yeah players are not updated realtime when they join, only when the component mounts it does
-  // we will figure this out later, want to avoid re adding ancidents
+  //this should be fine now, needs some commenting
 
   // Real-time listener for countdown updates
 
@@ -59,16 +58,12 @@ const KahootGameScreen = () => {
 useEffect(() => {
   const playersRef = collection(db, 'games', gameId, 'players');
   const unsubscribePlayers = onSnapshot(playersRef, (snapshot) => {
-    const playersList = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-
-    // Ensure unique players
-    const uniquePlayersMap = new Map();
-    playersList.forEach(player => uniquePlayersMap.set(player.playerId, player));
-    const uniquePlayers = Array.from(uniquePlayersMap.values());
-
-    // Update players state
-    setPlayers(uniquePlayers);
-    console.log('Updated players list:', uniquePlayers);
+    const playersList = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+    setPlayers(playersList);
+    console.log('Updated players list:', playersList);
   });
 
   return () => unsubscribePlayers();
@@ -101,6 +96,8 @@ useEffect(() => {
     const lobbyRef = doc(db, 'games', gameId);
     await updateDoc(lobbyRef, { status: 'started', countdown: 10 });
   
+    setGameStarted(true);
+
     const timer = setInterval(async () => {
       const gameDoc = await getDoc(lobbyRef);
       const currentCountdown = gameDoc.data().countdown;
@@ -116,8 +113,7 @@ useEffect(() => {
   const exitGame = async () => {
     const playerId = auth.currentUser.uid;
     if (playerId) {
-      try {
-        // First, check if the user is the creator and delete the game if they are
+      try { // First, check if the user is the creator and delete the game if they are
         const gameDocRef = doc(db, 'games', gameId);
         const gameDoc = await getDoc(gameDocRef);
   
@@ -142,7 +138,7 @@ useEffect(() => {
   
       // If the user is not the creator, attempt to delete their player document in the subcollection
       try {
-        const playerDocRef = doc(db, 'games', gameId, 'players', playerId); // Referencing with playerId as document ID
+        const playerDocRef = doc(db, 'games', gameId, 'players', playerId);
         await deleteDoc(playerDocRef);
         console.log(`Player document ${playerId} removed from game ${gameId}`);
         navigation.navigate('KahootHomeScreen'); // Redirect after player removal
@@ -165,7 +161,7 @@ useEffect(() => {
         <Text key={index}>{player.playerName}</Text>
       ))}
       {isHost && (
-      <Button title="Start Game" onPress={startGame} />)}
+      <Button title="Start Game" onPress={startGame} disabled={gameStarted} />)}
       <Button title="Exit Lobby" onPress={exitGame} />
     </View>
   );

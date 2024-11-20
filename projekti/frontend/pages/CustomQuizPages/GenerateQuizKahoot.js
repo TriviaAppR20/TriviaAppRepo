@@ -145,12 +145,14 @@ export default function GenerateQuizKahoot({ navigation }) {
       });
 
       const playerId = auth.currentUser?.uid;
+      const playerName = auth.currentUser?.displayName || 'Anonymous';
       if (playerId) {
-        await setDoc(doc(db, "games", gameDocRef.id, "players", playerId), {
+        await setDoc(doc(db, 'games', gameDocRef.id, 'players', playerId), {
           uid: playerId,
-          displayName: auth.currentUser?.displayName || "Anonymous",
+          playerName: playerName,
           score: 0,
         });
+        console.log('Player added to the game:', playerId, playerName);
       }
 
       Alert.alert("Lobby created with code:", gameCode);

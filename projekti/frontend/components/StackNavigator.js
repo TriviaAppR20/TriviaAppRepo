@@ -38,16 +38,8 @@ export default function StackNavigator() {
       <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="Lobby" component={Lobby} />
       <Stack.Screen name="SelectQuiz" component={SelectQuiz} />
-      <Stack.Screen
-        name="KahootGameScreen"
-        component={KahootGameScreen}
-        options={{ headerLeft: null }}
-      />
-      <Stack.Screen
-        name="QuizzScreen"
-        component={QuizzScreen}
-        options={{ headerLeft: null }}
-      />
+      <Stack.Screen name="KahootGameScreen" component={KahootGameScreen} options={{ headerBackVisible: false }}/>
+      <Stack.Screen name="QuizzScreen" component={QuizzScreen}  options={{ headerBackVisible: false }} />
       <Stack.Screen name="CreateQuiz" component={CreateQuiz} />
       <Stack.Screen name="SignUpScreen" component={SignUpScreen} />
       <Stack.Screen name="GenerateQuizKahoot" component={GenerateQuizKahoot} />

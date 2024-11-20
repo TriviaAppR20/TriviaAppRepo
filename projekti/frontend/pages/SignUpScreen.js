@@ -1,38 +1,99 @@
-import React, { useState } from 'react';
-import { View, TextInput, Button, Text, StyleSheet } from 'react-native';
-import { auth } from '../../backend/firebase/firebase';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import React, { useState } from "react";
+import { View, TextInput, Button, Alert, StyleSheet, Text } from "react-native";
+import { auth } from "../../backend/firebase/firebase";
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  deleteUser,
+  updateProfile,
+} from "firebase/auth";
 
 const SignUpScreen = ({ navigation }) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
 
 
-  // Function to handle sign up
+  //handles sign up
+  //now saves the name to the user profile
   const handleSignUp = async () => {
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
-      alert('Account created!');
-      navigation.navigate('Login');
+      const currentUser = auth.currentUser;
+
+      // Save the current UID if the user is anonymous
+      //allows to associate any data or state tied to the anonymous user with
+      //newly created account
+      //this isnt even nessessary as of now,
+
+      //for example:: if you are adding things to a cart, but in the process are required to log in
+      //you can save the cart to the anonymous user, and then when the user logs in, you can transfer the cart to the new user
+      const anonymousUid = currentUser?.isAnonymous ? currentUser.uid : null;
+      //apparently a common best practise in Firebase apps to handle transitions from anonymous to permanent users
+
+
+
+      // Create the new user account
+      const newUser = await createUserWithEmailAndPassword(auth, email, password);
+
+      // Update the profile with the name
+      await updateProfile(newUser.user, { displayName: name });
+
+      // Delete the anonymous user if one existed
+      if (anonymousUid) {
+        await deleteUser(currentUser);
+        console.log("Anonymous user deleted:", anonymousUid);
+      }
+
+      Alert.alert("Success", "Account created!");
+      navigation.navigate("Settings"); //change if needed
     } catch (error) {
-      alert(error.message);
+      Alert.alert("Error", error.message);
+      console.error("Sign-up error:", error);
     }
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.header}>Sign Up</Text>
-      <TextInput style={styles.input} placeholder="Email" onChangeText={setEmail} value={email} />
-      <TextInput style={styles.input} placeholder="Password" secureTextEntry onChangeText={setPassword} value={password} />
+      <TextInput
+        style={styles.input}
+        placeholder="Name"
+        value={name}
+        onChangeText={setName}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Email"
+        value={email}
+        onChangeText={setEmail}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Password"
+        secureTextEntry
+        value={password}
+        onChangeText={setPassword}
+      />
       <Button title="Sign Up" onPress={handleSignUp} />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', padding: 16 },
-  header: { fontSize: 24, marginBottom: 20 },
-  input: { borderBottomWidth: 1, marginBottom: 15, padding: 8 },
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    padding: 16,
+  },
+  header: {
+    fontSize: 24,
+    marginBottom: 20,
+  },
+  input: {
+    borderBottomWidth: 1,
+    marginBottom: 15,
+    padding: 8,
+  },
 });
 
 export default SignUpScreen;
