@@ -10,10 +10,10 @@ import QuizzScreen from "../pages/CustomQuizPages/QuizzScreen";
 import CreateQuiz from "../pages/CustomQuizPages/CreateQuiz";
 import SignUpScreen from "../pages/SignUpScreen";
 import GenerateQuizKahoot from "../pages/CustomQuizPages/GenerateQuizKahoot";
-import { StatusBar } from 'react-native';
+import { StatusBar } from "react-native";
 import { DarkModeContext } from "../pages/DarkModeContext";
 import { useContext } from "react";
-import SettingsScreen from '../pages/SettingsScreen';
+import SettingsScreen from "../pages/SettingsScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -24,37 +24,73 @@ export default function StackNavigator() {
 
   return (
     <>
-    <StatusBar barStyle={styles.barStyle} backgroundColor={styles.backgroundColor}/>
-    <Stack.Navigator screenOptions={{ headerTitleAlign: 'center' }}>
-      <Stack.Screen
-        name="Main"
-        component={DrawerNavigator}
-        options={{ headerShown: false }}
+      <StatusBar
+        barStyle={styles.barStyle}
+        backgroundColor={styles.backgroundColor}
       />
-      <Stack.Screen name="Game" component={GameScreen} />
+      <Stack.Navigator
+        screenOptions={{
+          headerTitleAlign: "center",
+          headerStyle: styles.headerStyle,
+          headerTintColor: styles.headerTintColor,
+        }}
+      >
+        <Stack.Screen
+          name="Main"
+          component={DrawerNavigator}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Game"
+          component={GameScreen}
+          options={{ headerBackVisible: false }}
+        />
 
-      {/*Temporary, for accessing Kahoot stuff, can be relocated or deleted later etc*/}
-      <Stack.Screen name="KahootHomeScreen" component={KahootHomeScreen} />
-      <Stack.Screen name="Login" component={LoginScreen} />
-      <Stack.Screen name="Lobby" component={Lobby} />
-      <Stack.Screen name="SelectQuiz" component={SelectQuiz} />
-      <Stack.Screen name="KahootGameScreen" component={KahootGameScreen} options={{ headerBackVisible: false }}/>
-      <Stack.Screen name="QuizzScreen" component={QuizzScreen}  options={{ headerBackVisible: false }} />
-      <Stack.Screen name="CreateQuiz" component={CreateQuiz} />
-      <Stack.Screen name="SignUpScreen" component={SignUpScreen} />
-      <Stack.Screen name="GenerateQuizKahoot" component={GenerateQuizKahoot} />
-      <Stack.Screen name="Settings" component={SettingsScreen} />
-    </Stack.Navigator>
+        {/*Temporary, for accessing Kahoot stuff, can be relocated or deleted later etc*/}
+        <Stack.Screen name="KahootHomeScreen" component={KahootHomeScreen} />
+        <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Screen name="Lobby" component={Lobby} />
+        <Stack.Screen name="SelectQuiz" component={SelectQuiz} />
+        <Stack.Screen
+          name="KahootGameScreen"
+          component={KahootGameScreen}
+          options={{ headerBackVisible: false }}
+        />
+        <Stack.Screen
+          name="QuizzScreen"
+          component={QuizzScreen}
+          options={{ headerBackVisible: false }}
+        />
+        <Stack.Screen name="CreateQuiz" component={CreateQuiz} />
+        <Stack.Screen name="SignUpScreen" component={SignUpScreen} />
+        <Stack.Screen
+          name="GenerateQuizKahoot"
+          component={GenerateQuizKahoot}
+        />
+        <Stack.Screen name="Settings" component={SettingsScreen} />
+      </Stack.Navigator>
     </>
   );
 }
 
 const lightStyles = {
   barStyle: "dark-content",
-  backgroundColor: "#FFF"
-}
+  backgroundColor: "#FFF",
+  headerStyle: {
+    backgroundColor: "#FFF",
+    elevation: 20,
+    shadowColor: "#f87609",
+  },
+  headerTintColor: "#000",
+};
 
 const darkStyles = {
   barStyle: "light-content",
-  backgroundColor: "#000"
-}
+  backgroundColor: "#000",
+  headerStyle: {
+    backgroundColor: "#000",
+    elevation: 20,
+    shadowColor: "#f87609",
+  },
+  headerTintColor: "#FFF",
+};
