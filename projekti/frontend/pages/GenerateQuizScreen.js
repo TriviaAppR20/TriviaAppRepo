@@ -9,13 +9,14 @@ import {
 } from "react-native";
 import Slider from "@react-native-community/slider";
 import CustomPicker from "../components/CustomPicker";
+import CustomStepper from "../components/CustomStepper";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { DarkModeContext } from "./DarkModeContext";
 import { StatusBar } from "react-native";
 
 export default function GenerateQuizScreen({ navigation }) {
   const [categories, setCategories] = useState([]);
-  const [amountOfQuestions, setAmountOfQuestions] = useState(10);
+  const [amountOfQuestions, setAmountOfQuestions] = useState(20);
   const [category, setCategory] = useState("");
   const [difficulty, setDifficulty] = useState("");
   const [type, setType] = useState("");
@@ -128,11 +129,9 @@ export default function GenerateQuizScreen({ navigation }) {
       const data = await fetchQuestions();
       if (data.response_code === 0) {
         navigation.navigate("Game", { questions: data.results });
-      } 
-      else if (data.response_code === 4) {
+      } else if (data.response_code === 4) {
         showTokenEmpty();
-      }
-      else {
+      } else {
         let errorMessage = "";
 
         switch (data.response_code) {
@@ -208,19 +207,13 @@ export default function GenerateQuizScreen({ navigation }) {
         Number of questions
       </Text>
       <View style={styles.sliderContainer}>
-        <Text style={[styles.sliderLabel, isDarkMode && dark.sliderLabel]}>
-          {amountOfQuestions}
-        </Text>
-        <Slider
-          style={styles.slider}
-          minimumValue={5}
-          maximumValue={50}
-          step={1}
-          value={amountOfQuestions}
-          onSlidingComplete={(value) => setAmountOfQuestions(value)}
-          minimumTrackTintColor={"#f87609"}
-          maximumTrackTintColor={"#f87609"}
-          thumbTintColor={"#f87609"}
+        <CustomStepper
+          initialValue={20}
+          minValue={5}
+          maxValue={50}
+          onChange={(newVal) => setAmountOfQuestions(newVal)}
+          styles={[stepperStyles, isDarkMode ? darkStepperStyles : {}]}
+          iconColor={isDarkMode ? "#FFF" : "#000"}
         />
       </View>
 
@@ -272,7 +265,7 @@ export default function GenerateQuizScreen({ navigation }) {
         iconColor={isDarkMode ? "white" : "black"}
       />
 
-      <Text style={{ color: "white" }}>{generateQueryUrl()}</Text>
+      <Text style={{ color: isDarkMode ? "white" : "black" }}>{generateQueryUrl()}</Text>
       <TouchableOpacity
         style={[styles.startButton, isDarkMode && dark.startButton]}
         onPress={() => generateQuiz()}
@@ -371,35 +364,6 @@ const styles = StyleSheet.create({
   },
 });
 
-const pickerStyles = StyleSheet.create({
-  button: {
-    marginBottom: 32,
-    borderWidth: 1,
-    borderColor: "#f87609",
-  },
-  item: {
-    backgroundColor: "#FFF",
-  },
-  itemText: {
-    color: "#000",
-  },
-});
-const darkPickerStyles = StyleSheet.create({
-  button: {
-    backgroundColor: "#000",
-    borderColor: "#f87609",
-  },
-  buttonText: {
-    color: "#FFF",
-  },
-  item: {
-    backgroundColor: "#000",
-  },
-  itemText: {
-    color: "#FFF",
-  },
-});
-
 const dark = StyleSheet.create({
   page: {
     backgroundColor: "#121212",
@@ -419,3 +383,61 @@ const dark = StyleSheet.create({
     color: "#FFF",
   },
 });
+
+const pickerStyles = {
+  button: {
+    marginBottom: 32,
+    borderWidth: 1,
+    borderColor: "#f87609",
+  },
+  item: {
+    backgroundColor: "#FFF",
+  },
+  itemText: {
+    color: "#000",
+  },
+};
+const darkPickerStyles = {
+  button: {
+    backgroundColor: "#000",
+    borderColor: "#f87609",
+  },
+  buttonText: {
+    color: "#FFF",
+  },
+  item: {
+    backgroundColor: "#000",
+  },
+  itemText: {
+    color: "#FFF",
+  },
+};
+
+const stepperStyles = {
+  container: {
+    borderWidth: 1,
+    borderColor: "#f87609",
+    borderRadius: 32,
+    backgroundColor: "#FFF",
+  },
+  button: {
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderRadius: 32,
+  },
+  input: {
+    width: 50,
+    color: "#000"
+  }
+};
+const darkStepperStyles = {
+  container: {
+    backgroundColor: "#000"
+  },
+  buttonText: {
+    color: "#FFF"
+  },
+  input: {
+    color: "#FFF",
+  },
+};
