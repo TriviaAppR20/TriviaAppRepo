@@ -10,45 +10,88 @@ const CreateQuiz = ({ navigation }) => {
   const [correctAnswer, setCorrectAnswer] = useState(null);
   const [questions, setQuestions] = useState([]);
 
-  // Update the answer text at the given index
+// CreateQuiz Component
+//
+// Purpose:
+// Provides a user interface for creating custom quizzes with multiple questions
+//
+// Key Functionalities:
+// - Allows users to input quiz title and multiple-choice questions
+// - Validates question and answer completeness
+// - Supports adding multiple questions to a single quiz
+// - Saves quiz data to Firebase Firestore database
+// - Provides error handling and user feedback
+
+
+  // Updates an individual answer's text in the answers array
+  //
+  // Allows modification of specific answer options without affecting others
+  // 
+  // @param {string} text - New text for the answer
+  // @param {number} index - Index of the answer being modified
   const handleAnswerChange = (text, index) => {
     const newAnswers = [...answers];
     newAnswers[index] = text;
     setAnswers(newAnswers);
   };
 
-  // Save the current question to the list of questions
+
+
+  // Saves the current question to the quiz's question list
+  //
+  // Validation steps:
+  // - Ensures question text is not empty
+  // - Checks that all answer fields are filled
+  // - Verifies a correct answer is selected
+  //
+  // After successful validation:
+  // - Adds question to questions array
+  // - Resets input fields for next question
   const saveQuestion = () => {
     if (!questionText || answers.some(answer => !answer) || correctAnswer === null) {
       Alert.alert("Please fill in all fields and select a correct answer.");
       return;
     }
-
+  // Create question object with all necessary details
     const newQuestion = {
       questionText,
       answers,
       correctAnswer: answers[correctAnswer]
     };
-
+  // Update questions list and reset input fields
     setQuestions([...questions, newQuestion]);
     setQuestionText('');
     setAnswers(['', '', '', '']);
     setCorrectAnswer(null);
   };
 
-  // Save the quiz to the database
+
+
+
+  // Finalizes and saves the entire quiz to the database
+  //
+  // Workflow:
+  // - Validates that at least one question exists
+  // - Saves quiz data to Firestore
+  // - Provides user feedback
+  // - Handles navigation after successful save
+  //
+  // Error handling:
+  // - Prevents saving empty quizzes
+  // - Catches and logs database saving errors
   const finishQuiz = async () => {
-    if (questions.length === 0) {
+    if (questions.length === 0) { // Prevent saving empty quiz
       Alert.alert("Add at least one question to finish the quiz.");
       return;
     }
 
-    try {
+    try { // Save quiz to Firestore with all collected data
       await addDoc(collection(db, 'quizzes'), {
         quizTitle,
         questions,
         creatorId: auth.currentUser.uid
       });
+      // Success feedback and navigation
       Alert.alert("Quiz created successfully!");
       navigation.goBack(); // Go back to previous screen or quizzes list
     } catch (error) {

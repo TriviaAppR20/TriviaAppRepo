@@ -38,14 +38,13 @@ const SignUpScreen = ({ navigation }) => {
       // Update the profile with the name
       await updateProfile(newUser.user, { displayName: name });
 
-      // Delete the anonymous user if one existed
-      if (anonymousUid) {
-        await deleteUser(currentUser);
-        console.log("Anonymous user deleted:", anonymousUid);
-      }
 
+      //no need to delete anonymous user here since you are not signed in as you create a new account!
+      //wait, you actually are signed in, hmm needs more testing
+
+      
       Alert.alert("Success", "Account created!");
-      navigation.navigate("Settings"); //change if needed
+      navigation.navigate("Home"); //change if needed
     } catch (error) {
       Alert.alert("Error", error.message);
       console.error("Sign-up error:", error);

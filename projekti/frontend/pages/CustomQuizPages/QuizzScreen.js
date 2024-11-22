@@ -25,10 +25,6 @@ const QuizzScreen = () => {
   const [proceeding, setProceeding] = useState(false);
   const navigation = useNavigation();
 
-
- //this has all kinds of stuff that needs to be looked over, 
- //probably has a lot of unnecessary stuff/bloat that can be remove
-
 // game is fetched, and then displayed to all players.
 // players choose answer to be submitted to the database.
 // this is used to check if every one has answered ===
@@ -39,11 +35,6 @@ const QuizzScreen = () => {
 // correct answers are checked and saved for each player,
 // at the end, the best player is displayed, and the game is deleted after 30 seconds.
 // calcultions are made for personal performance as well.
-
-
-// **note:!! if playing with browser and not with mobile, some bugs, mis-timings and skips
-//can happen!!!!!
-//WORKS ON MOBILE TO MOBILE
 
 
 //if something is unclear,,, just paste a snippet to gbt and explain what is happening : DDD
@@ -78,7 +69,7 @@ useEffect(() => {
 }, [quizId]);
 
 
-//managing tiemr in game,
+//managing timer in game,
 //if time runs out, then the player is marked as timed out
 //checks if all players have answered
 //if not zero, setsup a timer
@@ -203,11 +194,6 @@ useEffect(() => {
 }, [gameId, players.length, playersAnswered.length, showCorrectAnswer, proceeding]);
 
 
-// maybe send a boolean to database when your time = 0
-// then show correct answer, and then proceed to next question thingy
-// perhaps this could work. Remember to clear timer boolean when new question
-
-
 //handles the next question, clears answers and timed out players
 //if answers are run out, finish game call
 const proceedToNextQuestion = async () => {
@@ -318,7 +304,6 @@ const deleteGame = async () => {
 // this is, because.
 
 
-
 //gets players and takes the score and starts to compare them
 const fetchBestPlayer = async () => {
   setLoadingBestPlayer(true);
@@ -352,13 +337,6 @@ const fetchBestPlayer = async () => {
 };
 
 
-  //return has conditions for showing questions, answers, and the correct answer
-  //and the end screen and so forth.
-  //probably needs to be cleaned up a bit and modified when approaching final version
-
-  //prototype styling exists, but can be modified to fit the final version
-  // and is not set in stone....
-
 
   //this exitgame is copypaste from KahootGameScreen.js
   //it is used to exit the game, and delete the game from the database
@@ -387,9 +365,11 @@ const fetchBestPlayer = async () => {
           }
         } else {
           console.error('Game document not found:', gameId);
+          navigation.navigate('KahootHomeScreen');
           return; // Exit if the game document is missing
         }
-      } catch (error) {
+      } catch (error) { //made sure that non host can exit the game regardless what has happened
+        navigation.navigate('KahootHomeScreen');
         console.error('Error while checking/deleting game document:', error.message || error);
       }
   
