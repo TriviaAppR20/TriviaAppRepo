@@ -10,27 +10,48 @@ const LoginScreen = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  //handles log in
-  //saves email and password to async storage
+// This screen manages user authentication for the mobile application.
+//
+// Key functionalities:
+// - Allows existing users to log in with email and password
+// - Handles deletion of anonymous users before login
+// - Stores login credentials in AsyncStorage for potential future use
+// - Provides navigation to the SignUp screen for new users
+// - Implements error handling for login attempts
+
+
+
+  // Handles the login process for users
+  //
+  // Primary operations:
+  // - Checks and removes any existing anonymous user
+  // - Authenticates user with Firebase credentials
+  // - Stores login information in AsyncStorage
+  // - Navigates to Home screen upon successful authentication
   const handleLogin = async () => {
     try {
       const currentUser = auth.currentUser;
-      // Check if the current user is anonymous
+      
+      // Remove anonymous user if present before logging in
       if (currentUser?.isAnonymous) {
         const anonymousUid = currentUser.uid;
-        
         // Delete the anonymous user
         await deleteUser(currentUser);
         console.log("Anonymous user deleted:", anonymousUid);
       }
 
+       // Authenticate user with Firebase
       const userCredential = await signInWithEmailAndPassword(
         auth,
         email,
         password
       );
+
+      // Store login credentials for potential future use
       await AsyncStorage.setItem("email", email);
       await AsyncStorage.setItem("password", password);
+
+
       console.log("email/password Logged in:", userCredential.user.uid);
       Alert.alert("Logged in successfully");
       navigation.navigate("Home");
@@ -39,7 +60,10 @@ const LoginScreen = () => {
     }
   };
 
-  //redirects to Sign up screen
+
+  // Navigates user to the SignUp screen
+  //
+  // Allows new users to create an account by redirecting to the registration page
   const handleSignUp = () => {
     navigation.navigate("SignUpScreen");
   };

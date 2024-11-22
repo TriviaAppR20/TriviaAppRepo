@@ -9,31 +9,33 @@ const Lobby = () => {
   const [gameCode, setGameCode] = useState('');
   const [lobbyData, setLobbyData] = useState(null);
   const [anonymousName, setAnonymousName] = useState('');
-  const [isChoosingName, setIsChoosingName] = useState(false); // Tracks if name input is needed
+  const [isChoosingName, setIsChoosingName] = useState(false);
   const db = getFirestore();
   const auth = getAuth();
 
-  // Join the lobby with the given game code
-  // adds players data to the game subcollection 'players'
-  // this is where all of the players who have joined are listed as array
-  // this is why we can sync countdowns and question between all players
+// The Lobby screen manages joining a game lobby using Firebase Firestore and Auth.
+// Users can enter a game code to join, and if the game exists and hasn't started, they're added to the lobby.
+// Key features include:
+// - Supporting both anonymous users and authenticated users (e.g., email/password accounts).
+// - Allowing anonymous users to choose a name before joining.
+// - Adding players to a Firestore players subcollection for real-time updates.
+// - Handling various edge cases (invalid game code, game already started, user not authenticated).
+// - Navigating successfully joined users to the game screen.
 
-  //  currenlty players are known as by their uid.
-  //  it would be cool to have "choose name" feature for players
-  //  not sure where it should be implemented, maybe here for people who join
-  //  and people who host aka users with email accounts, in the profile??
-  //  discuss...
 
+
+// Adds a player to the Firestore 'players' subcollection under the specified game
+// Players are identified by their UID and have attributes like name and join time
   const addPlayerToLobby = async (gameId, playerId, playerName) => {
     try {
       await setDoc(doc(db, 'games', gameId, 'players', playerId), {
         playerId,
         playerName,
-        joinedAt: new Date(),
+        joinedAt: new Date(),// Stores the timestamp of joining, not currently used for anything
       });
       console.log('Player added to the lobby:', playerName);
     } catch (error) {
-      console.error('Error adding player to the lobby:', error);
+      console.error('Error adding player to the lobby:', error); //firestore errors
       alert('Failed to join the lobby. Please try again.');
     }
   };
@@ -41,41 +43,43 @@ const Lobby = () => {
  
 
 
-  //Tries to join game lobby
-  //checks if the game has not started
-  //if user is anonymous, checks if name is chosen
-  //if all conditions are met, user is added to the lobby
-
-  //structure for the name cheking is not great probably
-  //as it re runs the function, but it works for now
+// Tries to join a game lobby using the entered game code
+// - Checks if the game exists
+// - Verifies the game hasn't started
+// - Ensures anonymous users choose a name before joining
   const handleJoinLobby = () => {
+      // Queries the 'games' collection for a document matching the entered game code
     const q = query(collection(db, 'games'), where('gameCode', '==', gameCode));
+
+      // Listener for real-time changes to the query results
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      if (!querySnapshot.empty) {
-        const lobbyDoc = querySnapshot.docs[0];
-        setLobbyData({ id: lobbyDoc.id, ...lobbyDoc.data() });
+      if (!querySnapshot.empty) { // If a matching game document is found
+        const lobbyDoc = querySnapshot.docs[0]; //get the first document
+        setLobbyData({ id: lobbyDoc.id, ...lobbyDoc.data() }); // Update local state with lobby data
         console.log('Lobby data fetched:', lobbyDoc.data());
 
-        const gameStatus = lobbyDoc.data().status;
-        const currentUser = auth.currentUser;
+        const gameStatus = lobbyDoc.data().status;//get the status of the game, used to check if the game has started
+        const currentUser = auth.currentUser; //get the current user
 
-        if (currentUser) {
-          if (gameStatus !== 'started') {
-            // If anonymous, ensure name is chosen
+        if (currentUser) { //is authenticated
+          if (gameStatus !== 'started') { //if the game has not started
+            // Handle anonymous users who haven't chosen a name
             if (currentUser.isAnonymous && !anonymousName.trim()) {
-              setIsChoosingName(true);
+              setIsChoosingName(true); //prompt for a name
               unsubscribe(); // Stop listening while name is chosen
-            } else {
+            } else { 
+              // Determine the player's name (anonymous or authenticated)
               const playerName = currentUser.isAnonymous
                 ? anonymousName
-                : currentUser.email;
-              addPlayerToLobby(lobbyDoc.id, currentUser.uid, playerName);
+                : currentUser.playerName || currentUser.displayName; // Use player's display name or email
+              addPlayerToLobby(lobbyDoc.id, currentUser.uid, playerName); //adds the player to the lobby
 
+              // Stop listening and navigate to the game screen
               unsubscribe();
               navigation.navigate('KahootGameScreen', {
-                gameCode: lobbyDoc.data().gameCode,
-                quizTitle: lobbyDoc.data().quizTitle,
-                gameId: lobbyDoc.id,
+                gameCode: lobbyDoc.data().gameCode, //pass the game code
+                quizTitle: lobbyDoc.data().quizTitle, //pass the quiztitle
+                gameId: lobbyDoc.id, //and the game id
               });
             }
           } else {
@@ -91,12 +95,13 @@ const Lobby = () => {
       }
     });
 
-    return unsubscribe;
+    return unsubscribe; //returns the unsubscribe for cleanup
   };
 
+// Handles anonymous users choosing a name and retrying the join process
   const handleSaveNameAndJoin = () => {
-    if (anonymousName.trim()) {
-      setIsChoosingName(false);
+    if (anonymousName.trim()) { //ensure a valid name is entered
+      setIsChoosingName(false); //exit the name choosing mode
       handleJoinLobby(); // Retry joining after name is set
     } else {
       Alert.alert('Error', 'Please enter a valid name.');
