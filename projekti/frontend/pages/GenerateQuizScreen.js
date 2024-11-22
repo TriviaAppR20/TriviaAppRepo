@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   Modal,
 } from "react-native";
-import Slider from "@react-native-community/slider";
 import CustomPicker from "../components/CustomPicker";
 import CustomStepper from "../components/CustomStepper";
 import AsyncStorage from "@react-native-async-storage/async-storage";
