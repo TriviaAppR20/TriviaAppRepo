@@ -10,6 +10,7 @@ import {
 import { decode } from "html-entities";
 import { DarkModeContext } from "./DarkModeContext";
 import CustomProgressBar from "../components/CustomProgressBar";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function GameScreen({ route, navigation }) {
   const { questions } = route.params;
@@ -22,9 +23,13 @@ export default function GameScreen({ route, navigation }) {
   const [gameEnded, setGameEnded] = useState(false);
   const [shuffledAnswers, setShuffledAnswers] = useState([]);
   const [score, setScore] = useState(0);
-  const [progressBarTrigger, setProgressBarTrigger] = useState(false)
+  const [answerStatus, setAnswerStatus] = useState([]);
+  const [progressBarTrigger, setProgressBarTrigger] = useState(false);
+  const [savingDone, setSavingDone] = useState(false);
 
   const currentQuestion = questions[currentQuestionIndex];
+  const categories = questions.map((question) => question.category);
+  const difficulties = questions.map((question) => question.difficulty);
 
   const { isDarkMode } = useContext(DarkModeContext);
 
@@ -37,7 +42,7 @@ export default function GameScreen({ route, navigation }) {
     setTimer(timeToAnswer);
     setSelectedAnswer(null);
     setIsAnswerSelected(false);
-    setProgressBarTrigger(!progressBarTrigger)
+    setProgressBarTrigger(!progressBarTrigger);
 
     const countdown = setInterval(() => {
       setTimer((prevTimer) => {
@@ -52,10 +57,11 @@ export default function GameScreen({ route, navigation }) {
     return () => clearInterval(countdown);
   }, [currentQuestionIndex]);
 
-  const handleNextQuestion = () => {
+  const handleNextQuestion = async () => {
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     } else {
+      saveStats();
       setGameEnded(true);
     }
   };
@@ -67,12 +73,46 @@ export default function GameScreen({ route, navigation }) {
 
       if (answer === currentQuestion.correct_answer) {
         setScore((prevScore) => prevScore + 1);
-      }
+        setAnswerStatus([...answerStatus, true]);
+      } else setAnswerStatus([...answerStatus, false]);
       setTimeout(handleNextQuestion, 2000);
     }
   };
 
-  if (gameEnded) {
+  const saveStats = async () => {
+    try {
+      const statsString = await AsyncStorage.getItem("SP_STATS");
+      const stats = statsString ? JSON.parse(statsString) : {};
+
+      for (let i = 0; i < categories.length; i++) {
+        const category = decode(categories[i]);
+        const difficulty = decode(difficulties[i]);
+        const isCorrect = answerStatus[i];
+
+        if (!stats[category]) {
+          stats[category] = {
+            easy: { correct: 0, incorrect: 0 },
+            medium: { correct: 0, incorrect: 0 },
+            hard: { correct: 0, incorrect: 0 },
+          };
+        }
+
+        const currentStats = stats[category][difficulty];
+        if (isCorrect) {
+          currentStats.correct += 1;
+        } else {
+          currentStats.incorrect += 1;
+        }
+      }
+
+      await AsyncStorage.setItem("SP_STATS", JSON.stringify(stats));
+      setSavingDone(true);
+    } catch (err) {
+      console.error("Failed to save stats: ", err);
+    }
+  };
+
+  if (gameEnded && savingDone) {
     return (
       <View style={[styles.endContainer, isDarkMode && dark.endContainer]}>
         <Text style={[styles.endScore, isDarkMode && dark.endScore]}>
@@ -95,7 +135,10 @@ export default function GameScreen({ route, navigation }) {
   return (
     <View style={[styles.page, isDarkMode && dark.page]}>
       <SafeAreaView style={{ width: "100%" }}>
-        <CustomProgressBar totalTime={timeToAnswer*1000} trigger={progressBarTrigger} />
+        <CustomProgressBar
+          totalTime={timeToAnswer * 1000}
+          trigger={progressBarTrigger}
+        />
       </SafeAreaView>
       <Text style={[styles.questionNum, isDarkMode && dark.questionNum]}>
         Question {currentQuestionIndex + 1} / {questions.length}
@@ -151,12 +194,12 @@ const styles = StyleSheet.create({
     padding: 20,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#EDEDED"
+    backgroundColor: "#EDEDED",
   },
   endScore: {
     fontSize: 28,
     marginBottom: 20,
-    color: "#000"
+    color: "#000",
   },
   endButton: {
     padding: 16,
@@ -202,7 +245,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#79E619ff",
   },
   wrongAnswer: {
-    borderColor: "#E62019ff", 
+    borderColor: "#E62019ff",
     backgroundColor: "#E62019ff",
   },
   answerText: {
@@ -214,16 +257,16 @@ const styles = StyleSheet.create({
 
 const dark = StyleSheet.create({
   endContainer: {
-    backgroundColor: "#121212"
+    backgroundColor: "#121212",
   },
   endScore: {
-    color: "#FFF"
+    color: "#FFF",
   },
   endButton: {
-    backgroundColor: "#000"
+    backgroundColor: "#000",
   },
   endButtonText: {
-    color: "#FFF"
+    color: "#FFF",
   },
   page: {
     backgroundColor: "#121212",

@@ -9,6 +9,7 @@ import HowToPlayScreen from "../pages/HowToPlayScreen";
 import DarkMode from "../pages/DarkMode";
 import { DarkModeContext } from '../pages/DarkModeContext';
 import { StatusBar } from 'react-native';
+import Statistics from '../pages/Statistics';
 
 const Drawer = createDrawerNavigator();
 
@@ -45,6 +46,7 @@ export default function DrawerNavigator() {
       <Drawer.Screen name="How To Play" component={HowToPlayScreen} />
       <Drawer.Screen name="About" component={AboutScreen} />
       <Drawer.Screen name="Dark Mode" component={DarkMode} />
+      <Drawer.Screen name="Statistics" component={Statistics} />
     </Drawer.Navigator>
   );
 }
