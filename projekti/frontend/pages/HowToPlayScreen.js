@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { DarkModeContext } from './DarkModeContext';
 
 const HowToPlayScreen = () => {
@@ -8,10 +8,10 @@ const HowToPlayScreen = () => {
     const styles = isDarkMode ? darkStyles : lightStyles;
 
     return (
-        <View style={styles.container}>
+        <ScrollView contentContainerStyle={styles.container}>
             <Text style={styles.title}>How to Play</Text>
             <Text style={styles.instructions}>
-                Welcome to the Trivia App! Here's how you can play:
+                {'\n\n'}Here's how you can play the quiz version of the game:
             </Text>
             <View style={styles.stepContainer}>
                 <Text style={styles.step}>
@@ -38,16 +38,39 @@ const HowToPlayScreen = () => {
                     5. After completing the quiz, you will see your score and can review the correct answers.
                 </Text>
             </View>
-            <Text style={styles.conclusion}>
-                Have fun and enjoy testing your knowledge!
+            <Text style={styles.instructions}>
+                {'\n\n'}Here's how you can play the math version of the game:
             </Text>
-        </View>
+            <View style={styles.stepContainer}>
+                <Text style={styles.step}>1. Select the type of math operation you want to practice by pressing one of the buttons at the top of the screen: +, -, x, or /.</Text>
+            </View>
+            <View style={styles.stepContainer}>
+                <Text style={styles.step}>2. Choose the difficulty level by pressing one of the colored buttons: green for easy, yellow for medium, and red for hard.</Text>
+            </View>
+            <View style={styles.stepContainer}>
+                <Text style={styles.step}>3. Press the "Generate Question" button to generate a new math question based on your selected operation and difficulty level.</Text>
+            </View>
+            <View style={styles.stepContainer}>
+                <Text style={styles.step}>4. The generated question will appear in the question box. Use the calculator buttons at the bottom of the screen to input your answer in the answer box.</Text>
+            </View>
+            <View style={styles.stepContainer}>
+                <Text style={styles.step}>5. Once you have entered your answer, press the "Submit Answer" button to check if your answer is correct.</Text>
+            </View>
+            <View style={styles.stepContainer}>
+                <Text style={styles.step}>6. If your answer is correct, you will see a "Correct!" message, and a new question will be generated automatically after a short delay. If your answer is incorrect, you will see an "Incorrect, try again." message, and you can try to answer the same question again.</Text>
+            </View>
+            <Text style={styles.conclusion}>
+                Keep practicing to improve your math skills!
+            </Text>
+        </ScrollView>
     );
 };
 
 const commonStyles = {
     container: {
-        flex: 1,
+        flexGrow: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
         padding: 20,
     },
     title: {
@@ -91,7 +114,11 @@ const lightStyles = StyleSheet.create({
     },
     instructions: {
         ...commonStyles.instructions,
-        color: '#666',
+        color: '#333',
+    },
+    stepContainer: {
+        ...commonStyles.stepContainer,
+        backgroundColor: '#f0f0f0',
     },
     step: {
         ...commonStyles.step,
@@ -99,7 +126,7 @@ const lightStyles = StyleSheet.create({
     },
     conclusion: {
         ...commonStyles.conclusion,
-        color: '#666',
+        color: '#333',
     },
 });
 
@@ -115,12 +142,11 @@ const darkStyles = StyleSheet.create({
     },
     instructions: {
         ...commonStyles.instructions,
-        color: '#ccc',
+        color: '#fff',
     },
     stepContainer: {
         ...commonStyles.stepContainer,
         backgroundColor: '#333',
-        borderColor: '#555',
     },
     step: {
         ...commonStyles.step,
@@ -128,7 +154,7 @@ const darkStyles = StyleSheet.create({
     },
     conclusion: {
         ...commonStyles.conclusion,
-        color: '#ccc',
+        color: '#fff',
     },
 });
 
