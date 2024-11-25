@@ -10,6 +10,7 @@ const MathChallenge = () => {
     const [feedback, setFeedback] = useState('');
     const [operation, setOperation] = useState('addition');
     const [difficulty, setDifficulty] = useState('easy');
+    const [streak, setStreak] = useState(0);
 
     const generateQuestion = () => {
         let num1, num2;
@@ -66,12 +67,14 @@ const MathChallenge = () => {
     const checkAnswer = () => {
         if (parseFloat(userAnswer) === answer) {
             setFeedback('Correct!');
+            setStreak(streak + 1);
             setTimeout(() => {
                 generateQuestion();
                 setFeedback('');
             }, 1000);
         } else {
-            setFeedback('Incorrect, try again.');
+            setFeedback('Incorrect! Streak lost!');
+            setStreak(0);
         }
     };
 
@@ -124,6 +127,7 @@ const MathChallenge = () => {
                     <Text style={styles.buttonText}>Submit Answer</Text>
                 </TouchableOpacity>
                 <Text style={styles.feedback}>{feedback}</Text>
+                <Text style={styles.streak}>Streak: {streak}</Text>
             </View>
             <View style={styles.calculatorContainer}>
                 <View style={styles.calculatorRow}>
@@ -246,6 +250,11 @@ const commonStyles = {
         marginTop: 10,
         textAlign: 'center',
     },
+    streak: {
+        fontSize: 18,
+        marginTop: 10,
+        textAlign: 'center',
+    },
     calculatorContainer: {
         position: 'absolute',
         bottom: 20,
@@ -318,12 +327,8 @@ const lightStyles = StyleSheet.create({
         ...commonStyles.feedback,
         color: '#333',
     },
-    calculatorButton: {
-        ...commonStyles.calculatorButton,
-        backgroundColor: '#f0f0f0',
-    },
-    calculatorButtonText: {
-        ...commonStyles.calculatorButtonText,
+    streak: {
+        ...commonStyles.streak,
         color: '#333',
     },
 });
@@ -367,12 +372,30 @@ const darkStyles = StyleSheet.create({
         ...commonStyles.feedback,
         color: '#fff',
     },
+    streak: {
+        ...commonStyles.streak,
+        color: '#fff',
+    },
+    calculatorContainer: {
+        position: 'absolute',
+        bottom: 20,
+    },
+    calculatorRow: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        marginBottom: 10,
+    },
     calculatorButton: {
-        ...commonStyles.calculatorButton,
+        width: 60,
+        height: 60,
+        justifyContent: 'center',
+        alignItems: 'center',
+        margin: 5,
         backgroundColor: '#333',
+        borderRadius: 30,
     },
     calculatorButtonText: {
-        ...commonStyles.calculatorButtonText,
+        fontSize: 24,
         color: '#fff',
     },
     calculatorButtonPlaceholder: {
