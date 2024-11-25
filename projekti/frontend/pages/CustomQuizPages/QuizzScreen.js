@@ -4,6 +4,7 @@ import { useRoute, useNavigation } from "@react-navigation/native";
 import { db } from "../../../backend/firebase/firebase";
 import { doc, collection, addDoc, getDoc, getDocs, onSnapshot, updateDoc, deleteDoc, setDoc } from "firebase/firestore";
 import { getAuth } from 'firebase/auth';
+import performanceService from "../../components/PerformanceService";
 
 const QuizzScreen = () => {
   const auth = getAuth();
@@ -15,7 +16,7 @@ const QuizzScreen = () => {
   const [questionIndex, setQuestionIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState(20);
   const [playersAnswered, setPlayersAnswered] = useState([]);
-  const[playersTimedOut, setPlayersTimedOut] = useState([]);
+  const [playersTimedOut, setPlayersTimedOut] = useState([]);
   const [loadingBestPlayer, setLoadingBestPlayer] = useState(true);
   const [hasAnswered, setHasAnswered] = useState(false);
   const [score, setScore] = useState(0);
@@ -239,9 +240,14 @@ const submitAnswer = async (selectedAnswer) => {
 
   const currentQuestion = questions[questionIndex];
   const isCorrect = selectedAnswer === currentQuestion.correctAnswer; // is correct
-  if (isCorrect) setScore((prevScore) => prevScore + 1); //gz you got a point
+  if (isCorrect){ setScore((prevScore) => prevScore + 1);  //gz you got a point
+  }
+
+    // Record the answer in PerformanceService (regardless of correctness)
+    await performanceService.recordAnswer(isCorrect, !isCorrect);
 
   try {
+
     const currentAnswersRef = collection(db, 'games', gameId, 'currentAnswers');//adds to total amount of players who have answered
     await addDoc(currentAnswersRef, {
       playerId: auth.currentUser.uid,
@@ -314,14 +320,16 @@ const fetchBestPlayer = async () => {
     const snapshot = await getDocs(playersRef);
     let bestScore = -1;
     let bestPlayerData = null;
+    const currentPlayerId = auth.currentUser.uid; // Get the current user's ID
 
-    // Loop through all players and compare their scores
+    // Determine the best player
     snapshot.forEach((doc) => {
       const data = doc.data();
       if (data.finalScore !== undefined && data.finalScore > bestScore) {
         bestScore = data.finalScore;
         bestPlayerData = {
-          playerName: data.playerName || "Anonymous", // Use playerName or fallback to 'Anonymous'
+          playerId: doc.id, // Store the playerId (doc ID in Firestore)
+          playerName: data.playerName || "Anonymous",
           finalScore: data.finalScore,
           percentageScore: (data.finalScore / questions.length) * 100,
         };
@@ -329,6 +337,14 @@ const fetchBestPlayer = async () => {
     });
 
     setBestPlayer(bestPlayerData);
+
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    // Check if the current user is the best player and record the win
+    if (bestPlayerData && bestPlayerData.playerId === currentPlayerId) {
+      await performanceService.recordGameWin();
+      console.log(currentPlayerId + " best player and the win has been recorded!");
+    }
   } catch (error) {
     console.error("Error fetching best player:", error);
   } finally {
@@ -386,6 +402,13 @@ const fetchBestPlayer = async () => {
       console.error('No player ID found. User may not be authenticated.');
     }
   };
+
+  useEffect(() => {
+    const userId = auth.currentUser.uid;
+    performanceService.setUserId(userId);
+  }, []);
+
+
 
 
   return (

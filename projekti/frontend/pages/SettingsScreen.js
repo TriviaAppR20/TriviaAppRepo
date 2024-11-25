@@ -10,15 +10,15 @@ import {
   signInAnonymously
 } from "firebase/auth";
 import { CommonActions } from "@react-navigation/native";
+import performanceService from "../components/PerformanceService";
 
 const SettingsScreen = ({ navigation }) => {
   const [name, setName] = useState("");
   const [user, setUser] = useState(null);
   const [isAnonymous, setIsAnonymous] = useState(false);
+  const [stats, setStats] = useState(null); // Initialize stats as null
 
   const auth = getAuth();
-
-
 
   useEffect(() => {
     // Listen for authentication state changes
@@ -38,11 +38,19 @@ const SettingsScreen = ({ navigation }) => {
     return unsubscribe; // Cleanup the listener on unmount
   }, []);
 
+  
+// Loads stats after ensuring the user is authenticated
+useEffect(() => {
+  const fetchStats = async () => {
+    if (!user || !user.uid) return;
+    performanceService.setUserId(user.uid); // Ensure the userId is set
+    await performanceService.loadStats(); // Load stats from Firestore
+    setStats(performanceService.getStats()); // Update state with latest stats
+  };
 
+  fetchStats();
+}, [user]); // Ensure this re-runs if user changes
 
-// saves the name to the user profile, the firebase uses displayName to store the name, this cant be changed
-//unless you want to save it to the database seperately
-// it saves it to the authentication profile, not the database
   const handleSave = async () => {
     if (!user) {
       Alert.alert("Error", "No user is logged in.");
@@ -57,29 +65,23 @@ const SettingsScreen = ({ navigation }) => {
     }
   };
 
-
-
-// here you can logout, it will remove the email and password from the async storage
-// and reset the navigation stack to the home screen
-// it will also sign in anonymously after logging out, this gave alot of trouble,
-// as the app.js also tries to handle stuff so... but it works now so.
   const handleLogOut = async () => {
     try {
       await signOut(auth);
       Alert.alert("Success", "You have been signed out.");
-  
-      await AsyncStorage.removeItem('email');
-      await AsyncStorage.removeItem('password');
-  
-      // Reset the navigation stack first
+
+      await AsyncStorage.removeItem("email");
+      await AsyncStorage.removeItem("password");
+
+      // Reset the navigation stack
       navigation.dispatch(
         CommonActions.reset({
           index: 0,
           routes: [{ name: "Home" }],
         })
       );
-  
-      // Sign in anonymously after resetting navigation
+
+      // Sign in anonymously
       const anonymousUser = await signInAnonymously(auth);
       console.log("Signed in anonymously:", anonymousUser.user.uid);
     } catch (error) {
@@ -87,11 +89,9 @@ const SettingsScreen = ({ navigation }) => {
     }
   };
 
-  
   const handleLogIn = () => {
     navigation.replace("Login");
   };
-  
 
   return (
     <View style={styles.container}>
@@ -100,7 +100,8 @@ const SettingsScreen = ({ navigation }) => {
           {isAnonymous ? (
             <>
               <Text style={styles.message}>
-                You are currently using an anonymous account. Log in to save your data.
+                You are currently using an anonymous account. Log in to save
+                your data.
               </Text>
               <Button title="Log In" onPress={handleLogIn} />
             </>
@@ -114,15 +115,40 @@ const SettingsScreen = ({ navigation }) => {
                 placeholder="Enter your name"
               />
               <Button title="Save" onPress={handleSave} />
+              <View style={styles.statsContainer}>
+                <Text style={styles.label}>Your Multiplayer Stats:</Text>
+                {stats ? (
+                  <>
+                    <Text>Total Answers: {stats.totalAnswers}</Text>
+                    <Text>Correct Answers: {stats.correctAnswers}</Text>
+                    <Text>
+                      Correct Percentage:{" "}
+                      {stats.correctPercentage
+                        ? stats.correctPercentage.toFixed(2)
+                        : 0}
+                      %
+                    </Text>
+                    <Text>Games Won: {stats.gamesWon}</Text>
+                  </>
+                ) : (
+                  <Text>Loading stats...</Text>
+                )}
+              </View>
               <View style={styles.signOutContainer}>
-                <Button title="Sign Out" onPress={handleLogOut} color="#d9534f" />
+                <Button
+                  title="Sign Out"
+                  onPress={handleLogOut}
+                  color="#d9534f"
+                />
               </View>
             </>
           )}
         </>
       ) : (
         <>
-          <Text style={styles.message}>You must be logged in to edit your name.</Text>
+          <Text style={styles.message}>
+            You must be logged in to edit your name.
+          </Text>
           <Button title="Login" onPress={() => navigation.navigate("Login")} />
         </>
       )}
@@ -145,19 +171,18 @@ const styles = StyleSheet.create({
     height: 40,
     borderColor: "#ccc",
     borderWidth: 1,
-    borderRadius: 5,
     marginBottom: 16,
     paddingHorizontal: 8,
   },
-  message: {
-    textAlign: "center",
-    fontSize: 16,
-    color: "#555",
-    marginBottom: 20,
+  statsContainer: {
+    marginTop: 16,
   },
   signOutContainer: {
-    marginTop: 20,
-    alignItems: "center",
+    marginTop: 16,
+  },
+  message: {
+    fontSize: 16,
+    marginBottom: 16,
   },
 });
 
