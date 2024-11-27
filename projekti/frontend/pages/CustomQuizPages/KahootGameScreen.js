@@ -1,10 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Button } from 'react-native';
+import { View, Text, Button, StyleSheet, TouchableOpacity } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { db, auth } from '../../../backend/firebase/firebase';
 import { doc, updateDoc, collection, getDocs, onSnapshot, getDoc, deleteDoc, arrayRemove } from 'firebase/firestore';
-
-
 
 // this screen is also known as the "game lobby"
 //players will join and be listed, standing by until host starts the game
@@ -15,10 +13,6 @@ import { doc, updateDoc, collection, getDocs, onSnapshot, getDoc, deleteDoc, arr
 //exiting from the lobby should delete user from database collection, also make sure
 //no ghosts stay in for the client after exiting i.e. unsubscribe
 
-
-
-
-
 const KahootGameScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
@@ -28,7 +22,6 @@ const KahootGameScreen = () => {
   const [countdownStarted, setCountdownStarted] = useState(false);
   const [gameStarted, setGameStarted] = useState(false);
   const [isHost, setIsHost] = useState(false);
-
 
   // Fetch players once when component mounts
 
@@ -54,7 +47,6 @@ const KahootGameScreen = () => {
     return () => unsubscribeGame();
   }, [gameId, navigation, gameCode]);
 
-
 // Real-time listener for player lobby updates
 useEffect(() => {
   const playersRef = collection(db, 'games', gameId, 'players');
@@ -73,8 +65,6 @@ useEffect(() => {
 
   return () => unsubscribePlayers();
 }, [gameId]);
-
-
 
 useEffect(() => {
   if (!gameStarted) {
@@ -95,7 +85,6 @@ useEffect(() => {
   }
 }, [gameId, gameStarted]);
 
-
   // Start the game countdown
   const startGame = async () => {
     const lobbyRef = doc(db, 'games', gameId);
@@ -112,7 +101,6 @@ useEffect(() => {
     }, 1000);
   };
 
-  
   const exitGame = async () => {
     const playerId = auth.currentUser.uid;
     if (playerId) {
@@ -153,22 +141,68 @@ useEffect(() => {
       console.error('No player ID found. User may not be authenticated.');
     }
   };
-  
 
   return (
-    <View>
-      <Text>Game Code: {gameCode}</Text>
-      <Text>Quiz Title: {quizTitle}</Text>
-      <Text>Countdown: {countdown}</Text>
-      <Text>Players:</Text>
+    <View style={styles.container}>
+      <Text style={styles.header}>Game Lobby</Text>
+      <Text style={styles.descriptionText}>Game Code: {gameCode}</Text>
+      <Text style={styles.descriptionText}>Quiz Title: {quizTitle}</Text>
+      <Text style={styles.descriptionText}>Countdown: {countdown}</Text>
+      <Text style={styles.header}>Players:</Text>
       {players.map((player, index) => (
-        <Text key={index}>{player.playerName}</Text>
+        <Text key={index} style={styles.playerName}>{player.playerName}</Text>
       ))}
       {isHost && (
-      <Button title="Start Game" onPress={startGame} />)}
-      <Button title="Exit Lobby" onPress={exitGame} />
+        <TouchableOpacity style={styles.button} onPress={startGame}>
+          <Text style={styles.buttonText}>Start Game</Text>
+        </TouchableOpacity>
+      )}
+      <TouchableOpacity style={styles.button} onPress={exitGame}>
+        <Text style={styles.buttonText}>Exit Lobby</Text>
+      </TouchableOpacity>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#EDEDED',
+    padding: 24,
+  },
+  header: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 24,
+    color: '#333',
+  },
+  descriptionText: {
+    color: '#000',
+    fontSize: 16,
+    marginBottom: 8,
+  },
+  playerName: {
+    fontSize: 16,
+    color: '#000',
+    marginBottom: 4,
+  },
+  button: {
+    backgroundColor: '#f87609',
+    paddingVertical: 18,
+    paddingHorizontal: 38,
+    borderWidth: 1,
+    borderRadius: 24,
+    borderColor: '#f87609',
+    marginVertical: 10,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+});
 
 export default KahootGameScreen;

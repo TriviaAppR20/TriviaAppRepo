@@ -23,7 +23,7 @@ export default function GameScreen({ route, navigation }) {
   const currentQuestion = questions[currentQuestionIndex];
 
   useLayoutEffect(() => {
-    if (!gameEnded) navigation.setOptions({headerTitle: `Time: ${timer}`,});
+    if (!gameEnded) navigation.setOptions({ headerTitle: `Time: ${timer}` });
     else navigation.setOptions({ headerTitle: "Quiz complete!" });
   }, [timer, gameEnded]);
 
@@ -72,38 +72,27 @@ export default function GameScreen({ route, navigation }) {
 
   if (gameEnded) {
     return (
-      <View
-        style={{
-          flex: 1,
-          padding: 20,
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <Text style={{ fontSize: 28, marginBottom: 20 }}>
-          Score: {score} / {questions.length}
-        </Text>
+      <View style={styles.container}>
+        <Text style={styles.header}>Score: {score} / {questions.length}</Text>
         <TouchableOpacity
-          style={{ padding: 16, backgroundColor: "#222", borderRadius: 16 }}
+          style={styles.button}
           onPress={() => navigation.navigate("Generate Quiz")}
         >
-          <Text style={{ color: "#FFF", fontSize: 16 }}>Generate new quiz</Text>
+          <Text style={styles.buttonText}>Generate new quiz</Text>
         </TouchableOpacity>
       </View>
     );
   }
 
   return (
-    <View style={{ padding: 24 }}>
-      <Text style={{ fontSize: 18 }}>
-        Question {currentQuestionIndex+1} / {questions.length}
+    <View style={styles.container}>
+      <Text style={styles.questionCountText}>
+        Question {currentQuestionIndex + 1} / {questions.length}
       </Text>
-      <Text style={{ fontSize: 18, marginBottom: 16 }}>
+      <Text style={styles.categoryText}>
         Category: {decode(currentQuestion.category)}
       </Text>
-      <Text style={{ fontSize: 24, marginBottom: 8 }}>
-        {decode(currentQuestion.question)}
-      </Text>
+      <Text style={styles.questionText}>{decode(currentQuestion.question)}</Text>
 
       <FlatList
         data={shuffledAnswers}
@@ -138,21 +127,72 @@ export default function GameScreen({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#EDEDED",
+    padding: 24,
+  },
+  header: {
+    fontSize: 28,
+    fontWeight: "bold",
+    marginBottom: 20,
+    color: "#333",
+  },
+  questionCountText: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 8,
+    color: "#000",
+  },
+  categoryText: {
+    fontSize: 18,
+    marginBottom: 16,
+    color: "#000",
+  },
+  questionText: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 16,
+    color: "#000",
+  },
   answerButton: {
-    padding: 10,
-    marginVertical: 5,
-    backgroundColor: "#001011ff",
-    borderRadius: 5,
+    backgroundColor: "#f87609",
+    paddingVertical: 18,
+    paddingHorizontal: 38,
+    borderWidth: 1,
+    borderRadius: 24,
+    borderColor: "#f87609",
+    marginVertical: 10,
+    alignItems: "center",
   },
   correctAnswer: {
-    backgroundColor: "#79E619ff",
+    backgroundColor: "#79E619",
+    borderColor: "#79E619",
   },
   wrongAnswer: {
-    backgroundColor: "#E62019ff",
+    backgroundColor: "#E62019",
+    borderColor: "#E62019",
   },
   answerText: {
     color: "#FFF",
-    textAlign: "center",
     fontSize: 18,
+    fontWeight: "bold",
+  },
+  button: {
+    backgroundColor: "#222",
+    paddingVertical: 16,
+    paddingHorizontal: 38,
+    borderWidth: 1,
+    borderRadius: 24,
+    borderColor: "#222",
+    marginVertical: 10,
+    alignItems: "center",
+  },
+  buttonText: {
+    color: "#FFF",
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });

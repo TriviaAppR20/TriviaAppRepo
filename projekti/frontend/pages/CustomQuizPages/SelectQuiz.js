@@ -43,7 +43,6 @@ const createLobbyAndNavigate = async (quiz) => {
     });
     console.log('Lobby created with code:', gameCode);
 
-
     // adds host as a player in the subcollection, its initializes here for all players
     // but just incase it exists in the Lobby addPlayerToLobby
     const playerId = auth.currentUser?.uid;
@@ -55,8 +54,6 @@ const createLobbyAndNavigate = async (quiz) => {
       });
       console.log('Player added to the game:', playerId);
     } 
-
-
 
     navigation.navigate('KahootGameScreen', { gameCode, quizTitle: quiz.quizTitle, gameId: gameDocRef.id, creatorId: playerId});
 
@@ -74,27 +71,72 @@ const createLobbyAndNavigate = async (quiz) => {
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
             <TouchableOpacity onPress={() => createLobbyAndNavigate(item)} style={styles.quizItem}>
-              <Text>{item.quizTitle}</Text>
+              <Text style={styles.quizTitle}>{item.quizTitle}</Text>
             </TouchableOpacity>
           )}
         />
       ) : (
-        <Text>No quizzes available. Create one!</Text>
+        <Text style={styles.descriptionText}>No quizzes available. Create one!</Text>
       )}
-      <Button title="Create Quiz" onPress={() => navigation.navigate('CreateQuiz')} />
+      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('CreateQuiz')}>
+        <Text style={styles.buttonText}>Create Quiz</Text>
+      </TouchableOpacity>
 
-      <Text>Want to generate quiz with random questions?</Text>
-      <Button title="Generate Random Quiz" onPress={() => navigation.navigate('GenerateQuizKahoot')} />
+      <Text style={styles.descriptionText}>Want to generate quiz with random questions?</Text>
+      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('GenerateQuizKahoot')}>
+        <Text style={styles.buttonText}>Generate Random Quiz</Text>
+      </TouchableOpacity>
     </View>
-    
   );
 };
 
-
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20 },
-  header: { fontSize: 24, fontWeight: 'bold', marginBottom: 20 },
-  quizItem: { padding: 10, borderBottomWidth: 1, borderColor: '#ccc' },
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#EDEDED',
+    padding: 24,
+  },
+  header: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 24,
+    color: '#333',
+  },
+  quizItem: {
+    padding: 18,
+    borderBottomWidth: 1,
+    borderColor: '#ccc',
+    backgroundColor: '#f87609',
+    borderRadius: 12,
+    marginVertical: 10,
+  },
+  quizTitle: {
+    color: '#000',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  button: {
+    backgroundColor: '#f87609',
+    paddingVertical: 18,
+    paddingHorizontal: 38,
+    borderWidth: 1,
+    borderRadius: 24,
+    borderColor: '#f87609',
+    marginVertical: 10,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: '#000',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  descriptionText: {
+    color: '#000',
+    fontSize: 16,
+    marginBottom: 8,
+  },
 });
 
 export default SelectQuiz;
