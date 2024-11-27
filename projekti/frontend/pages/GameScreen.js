@@ -1,12 +1,16 @@
-import React, { useEffect, useLayoutEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import {
   View,
   Text,
   FlatList,
   TouchableOpacity,
   StyleSheet,
+  SafeAreaView,
 } from "react-native";
 import { decode } from "html-entities";
+import { DarkModeContext } from "./DarkModeContext";
+import CustomProgressBar from "../components/CustomProgressBar";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function GameScreen({ route, navigation }) {
   const { questions } = route.params;
@@ -19,13 +23,18 @@ export default function GameScreen({ route, navigation }) {
   const [gameEnded, setGameEnded] = useState(false);
   const [shuffledAnswers, setShuffledAnswers] = useState([]);
   const [score, setScore] = useState(0);
+  const [answerStatus, setAnswerStatus] = useState([]);
+  const [progressBarTrigger, setProgressBarTrigger] = useState(false);
+  const [savingDone, setSavingDone] = useState(false);
 
   const currentQuestion = questions[currentQuestionIndex];
+  const categories = questions.map((question) => question.category);
+  const difficulties = questions.map((question) => question.difficulty);
 
-  useLayoutEffect(() => {
-    if (!gameEnded) navigation.setOptions({ headerTitle: `Time: ${timer}` });
-    else navigation.setOptions({ headerTitle: "Quiz complete!" });
-  }, [timer, gameEnded]);
+
+
+  const { isDarkMode } = useContext(DarkModeContext);
+
 
   useEffect(() => {
     const allAnswers = [
@@ -36,6 +45,7 @@ export default function GameScreen({ route, navigation }) {
     setTimer(timeToAnswer);
     setSelectedAnswer(null);
     setIsAnswerSelected(false);
+    setProgressBarTrigger(!progressBarTrigger);
 
     const countdown = setInterval(() => {
       setTimer((prevTimer) => {
@@ -50,10 +60,11 @@ export default function GameScreen({ route, navigation }) {
     return () => clearInterval(countdown);
   }, [currentQuestionIndex]);
 
-  const handleNextQuestion = () => {
+  const handleNextQuestion = async () => {
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     } else {
+      saveStats();
       setGameEnded(true);
     }
   };
@@ -65,42 +76,97 @@ export default function GameScreen({ route, navigation }) {
 
       if (answer === currentQuestion.correct_answer) {
         setScore((prevScore) => prevScore + 1);
-      }
+        setAnswerStatus([...answerStatus, true]);
+      } else setAnswerStatus([...answerStatus, false]);
       setTimeout(handleNextQuestion, 2000);
     }
   };
 
-  if (gameEnded) {
+  const saveStats = async () => {
+    try {
+      const statsString = await AsyncStorage.getItem("SP_STATS");
+      const stats = statsString ? JSON.parse(statsString) : {};
+
+      for (let i = 0; i < categories.length; i++) {
+        const category = decode(categories[i]);
+        const difficulty = decode(difficulties[i]);
+        const isCorrect = answerStatus[i];
+
+        if (!stats[category]) {
+          stats[category] = {
+            easy: { correct: 0, incorrect: 0 },
+            medium: { correct: 0, incorrect: 0 },
+            hard: { correct: 0, incorrect: 0 },
+          };
+        }
+
+        const currentStats = stats[category][difficulty];
+        if (isCorrect) {
+          currentStats.correct += 1;
+        } else {
+          currentStats.incorrect += 1;
+        }
+      }
+
+      await AsyncStorage.setItem("SP_STATS", JSON.stringify(stats));
+      setSavingDone(true);
+    } catch (err) {
+      console.error("Failed to save stats: ", err);
+    }
+  };
+
+  if (gameEnded && savingDone) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.header}>Score: {score} / {questions.length}</Text>
+
+      <View style={[styles.endContainer, isDarkMode && dark.endContainer]}>
+        <Text style={[styles.endScore, isDarkMode && dark.endScore]}>
+          Score: {score} / {questions.length}
+        </Text>
         <TouchableOpacity
-          style={styles.button}
+          style={[styles.endButton, isDarkMode && dark.endButton]}
           onPress={() => navigation.navigate("Generate Quiz")}
         >
-          <Text style={styles.buttonText}>Generate new quiz</Text>
+          <Text
+            style={[styles.endButtonText, isDarkMode && dark.endButtonText]}
+          >
+            Generate new quiz
+          </Text>
         </TouchableOpacity>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.questionCountText}>
+
+    <View style={[styles.page, isDarkMode && dark.page]}>
+      <SafeAreaView style={{ width: "100%" }}>
+        <CustomProgressBar
+          totalTime={timeToAnswer * 1000}
+          trigger={progressBarTrigger}
+        />
+      </SafeAreaView>
+      <Text style={[styles.questionNum, isDarkMode && dark.questionNum]}>
         Question {currentQuestionIndex + 1} / {questions.length}
       </Text>
-      <Text style={styles.categoryText}>
+      <Text
+        style={[styles.questionCategory, isDarkMode && dark.questionCategory]}
+      >
         Category: {decode(currentQuestion.category)}
       </Text>
-      <Text style={styles.questionText}>{decode(currentQuestion.question)}</Text>
+      <Text style={[styles.question, isDarkMode && dark.question]}>
+        {decode(currentQuestion.question)}
+      </Text>
+
 
       <FlatList
         data={shuffledAnswers}
         keyExtractor={(item) => item}
+        numColumns={1}
         renderItem={({ item }) => (
           <TouchableOpacity
             style={[
               styles.answerButton,
+              isDarkMode && dark.answerButton,
               isAnswerSelected &&
                 currentQuestion.type === "multiple" &&
                 item === currentQuestion.correct_answer &&
@@ -118,7 +184,9 @@ export default function GameScreen({ route, navigation }) {
             onPress={() => handleAnswerSelection(item)}
             disabled={isAnswerSelected}
           >
-            <Text style={styles.answerText}>{decode(item)}</Text>
+            <Text style={[styles.answerText, isDarkMode && dark.answerText]}>
+              {decode(item)}
+            </Text>
           </TouchableOpacity>
         )}
       />
@@ -127,56 +195,69 @@ export default function GameScreen({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: {
+  endContainer: {
     flex: 1,
-    justifyContent: "center",
+    padding: 20,
     alignItems: "center",
+    justifyContent: "center",
     backgroundColor: "#EDEDED",
-    padding: 24,
   },
-  header: {
+  endScore: {
     fontSize: 28,
-    fontWeight: "bold",
     marginBottom: 20,
-    color: "#333",
+    color: "#000",
   },
-  questionCountText: {
+  endButton: {
+    padding: 16,
+    backgroundColor: "#FFF",
+    borderRadius: 32,
+    borderWidth: 1,
+    borderColor: "#f87609",
+    paddingHorizontal: 32,
+  },
+  endButtonText: {
+    color: "#000",
+    fontSize: 16,
+  },
+  page: {
+    flex: 1,
+    padding: 24,
+    backgroundColor: "#EDEDED",
+  },
+  questionNum: {
     fontSize: 18,
-    fontWeight: "bold",
+    color: "#000",
+  },
+  questionCategory: {
+
+    fontSize: 18,
+    marginBottom: 16,
+    color: "#000",
+  },
+  question: {
+    fontSize: 24,
     marginBottom: 8,
     color: "#000",
   },
-  categoryText: {
-    fontSize: 18,
-    marginBottom: 16,
-    color: "#000",
-  },
-  questionText: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 16,
-    color: "#000",
-  },
   answerButton: {
-    backgroundColor: "#f87609",
-    paddingVertical: 18,
-    paddingHorizontal: 38,
+    padding: 10,
+    backgroundColor: "#FFF",
+    borderRadius: 32,
     borderWidth: 1,
-    borderRadius: 24,
     borderColor: "#f87609",
-    marginVertical: 10,
-    alignItems: "center",
+    marginVertical: 8,
   },
   correctAnswer: {
-    backgroundColor: "#79E619",
-    borderColor: "#79E619",
+    borderColor: "#79E619ff",
+    backgroundColor: "#79E619ff",
   },
   wrongAnswer: {
-    backgroundColor: "#E62019",
-    borderColor: "#E62019",
+    borderColor: "#E62019ff",
+    backgroundColor: "#E62019ff",
   },
   answerText: {
-    color: "#FFF",
+    color: "#000",
+    textAlign: "center",
     fontSize: 18,
     fontWeight: "bold",
   },
@@ -196,3 +277,37 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
 });
+
+const dark = StyleSheet.create({
+  endContainer: {
+    backgroundColor: "#121212",
+  },
+  endScore: {
+    color: "#FFF",
+  },
+  endButton: {
+    backgroundColor: "#000",
+  },
+  endButtonText: {
+    color: "#FFF",
+  },
+  page: {
+    backgroundColor: "#121212",
+  },
+  questionNum: {
+    color: "#FFF",
+  },
+  questionCategory: {
+    color: "#FFF",
+  },
+  question: {
+    color: "#FFF",
+  },
+  answerButton: {
+    backgroundColor: "#000",
+  },
+  answerText: {
+    color: "#FFF",
+  },
+});
+

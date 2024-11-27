@@ -6,13 +6,36 @@ import { collection, query, where, getDocs, addDoc, setDoc, doc, onSnapshot } fr
 const SelectQuiz = ({ navigation }) => {
   const [quizzes, setQuizzes] = useState([]);
 
-  //fetch quizzes created by the user id
+
+  // SelectQuiz Component
+  //
+  // Purpose:
+  // Manages quiz selection and lobby creation for multiplayer quiz game
+  //
+  // Key Functionalities:
+  // - Fetches quizzes created by the current user
+  // - Provides real-time updates of user's quizzes
+  // - Enables creating a game lobby from selected quiz
+  // - Handles navigation to game screen with generated lobby
+
+
+
+
+
+
+  // Fetch quizzes created by the current user
+  //
+  // Uses Firebase real-time listener to:
+  // - Query quizzes by current user's ID
+  // - Update quizzes list dynamically
+  // - Handle potential fetch errors
   useEffect(() => {
     const userId = auth.currentUser?.uid;
   
-    if (userId) {
+    if (userId) {  // Create query to fetch user's quizzes
       const q = query(collection(db, 'quizzes'), where('creatorId', '==', userId));
       
+       // Real-time snapshot listener
       const unsubscribe = onSnapshot(q, (querySnapshot) => {
         const userQuizzes = querySnapshot.docs.map(doc => ({
           id: doc.id,
@@ -23,16 +46,32 @@ const SelectQuiz = ({ navigation }) => {
         console.error("Error fetching quizzes:", error);
       });
   
-      // Unsubscribe when the component unmounts
+      // Cleanup subscription on component unmount
       return () => unsubscribe();
     }
   }, []);
 
-//choosing quiz creates a lobby
-//create a lobby and navigate to GameScreen where players can join
+
+  
+
+  // Creates a game lobby and navigates to game screen
+  //
+  // Workflow:
+  // - Generates unique game code
+  // - Creates game document in Firestore
+  // - Adds host player to game's players subcollection
+  // - Navigates to game screen with lobby details
+  //
+  // @param {Object} quiz - Selected quiz details
 const createLobbyAndNavigate = async (quiz) => {
   try {
+    // Ensure latest user data is loaded
+    await auth.currentUser.reload();
+
+    // Generate unique 6-digit game code
     const gameCode = Math.floor(100000 + Math.random() * 900000).toString(); // Generate game code
+
+    // Create game document in Firestore
     const gameDocRef = await addDoc(collection(db, 'games'), {
       gameCode: gameCode,
       status: 'open',
@@ -43,20 +82,28 @@ const createLobbyAndNavigate = async (quiz) => {
     });
     console.log('Lobby created with code:', gameCode);
 
-    // adds host as a player in the subcollection, its initializes here for all players
-    // but just incase it exists in the Lobby addPlayerToLobby
+
+    // Add host to players subcollection with updated displayName
+
     const playerId = auth.currentUser?.uid;
+    const playerName = auth.currentUser?.displayName || 'Anonymous';
     if (playerId) {
       await setDoc(doc(db, 'games', gameDocRef.id, 'players', playerId), {
         uid: playerId,
-        displayName: auth.currentUser?.displayName || 'Anonymous',
+        playerName: playerName,
         score: 0,
       });
-      console.log('Player added to the game:', playerId);
-    } 
 
-    navigation.navigate('KahootGameScreen', { gameCode, quizTitle: quiz.quizTitle, gameId: gameDocRef.id, creatorId: playerId});
+      console.log('Player added to the game:', playerId, playerName);
+    }
 
+
+    navigation.navigate('KahootGameScreen', {  // Navigate to game screen
+      gameCode,
+      quizTitle: quiz.quizTitle,
+      gameId: gameDocRef.id,
+      creatorId: playerId,
+    });
   } catch (error) {
     console.error('Error creating lobby:', error);
   }
