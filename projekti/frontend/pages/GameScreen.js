@@ -11,6 +11,8 @@ import { decode } from "html-entities";
 import { DarkModeContext } from "./DarkModeContext";
 import CustomProgressBar from "../components/CustomProgressBar";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { db } from "../../backend/firebase/firebase";
+import { doc, collection, addDoc, getDoc, getDocs, onSnapshot, updateDoc, deleteDoc, setDoc } from "firebase/firestore";
 
 export default function GameScreen({ route, navigation }) {
   const { questions } = route.params;
@@ -47,7 +49,9 @@ export default function GameScreen({ route, navigation }) {
     const countdown = setInterval(() => {
       setTimer((prevTimer) => {
         if (prevTimer === 1) {
-          handleNextQuestion();
+          if (currentQuestionIndex !== (questions.length - 1)) {
+            handleNextQuestion();
+          }
           return 0;
         }
         return prevTimer - 1;
@@ -61,7 +65,7 @@ export default function GameScreen({ route, navigation }) {
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     } else {
-      saveStats();
+      setTimeout(saveStats, 1000)
       setGameEnded(true);
     }
   };
@@ -105,6 +109,30 @@ export default function GameScreen({ route, navigation }) {
         }
       }
 
+      console.log(score)
+      let total = questions.length;
+      let correct = score;
+      let wrong = questions.length - score;
+
+      const docRef = doc(db, "singleData", "globalData")
+      try {
+        const statsDoc = await getDoc(docRef)
+        
+        if (statsDoc.exists()) {
+          total += statsDoc.data().totalQuestions
+          correct += statsDoc.data().correctAnswers
+          wrong += statsDoc.data().wrongAnswers
+        }
+        updatedData = {
+          totalQuestions: total,
+          correctAnswers: correct,
+          wrongAnswers: wrong
+        }
+        await setDoc(docRef, updatedData)
+        console.log("Success saving totalStats to DB!")
+      } catch (err) {
+        console.log("Error: ", err)
+      }
       await AsyncStorage.setItem("SP_STATS", JSON.stringify(stats));
       setSavingDone(true);
     } catch (err) {
