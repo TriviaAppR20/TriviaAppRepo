@@ -264,7 +264,7 @@ export default function GenerateQuizScreen({ navigation }) {
         iconColor={isDarkMode ? "white" : "black"}
       />
 
-      <Text style={{ color: isDarkMode ? "white" : "black" }}>{generateQueryUrl()}</Text>
+      {/*<Text style={{ color: isDarkMode ? "white" : "black" }}>{generateQueryUrl()}</Text>*/}
       <TouchableOpacity
         style={[styles.startButton, isDarkMode && dark.startButton]}
         onPress={() => generateQuiz()}
