@@ -105,36 +105,75 @@ const createLobbyAndNavigate = async (quiz) => {
   }
 };
 
-  return (
-    <View style={styles.container}>
-      <Text style={styles.header}>Choose Quiz</Text>
-      {quizzes.length > 0 ? (
-        <FlatList
-          data={quizzes}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <TouchableOpacity onPress={() => createLobbyAndNavigate(item)} style={styles.quizItem}>
-              <Text>{item.quizTitle}</Text>
-            </TouchableOpacity>
-          )}
-        />
-      ) : (
-        <Text>No quizzes available. Create one!</Text>
-      )}
-      <Button title="Create Quiz" onPress={() => navigation.navigate('CreateQuiz')} />
-
-      <Text>Want to generate quiz with random questions?</Text>
-      <Button title="Generate Random Quiz" onPress={() => navigation.navigate('GenerateQuizKahoot')} />
-    </View>
-    
-  );
+return (
+  <View style={commonStyles.container}>
+    <Text style={commonStyles.title}>Choose Quiz</Text>
+    {quizzes.length > 0 ? (
+      <FlatList
+        data={quizzes}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <TouchableOpacity onPress={() => createLobbyAndNavigate(item)} style={styles.quizItem}>
+            <Text>{item.quizTitle}</Text>
+          </TouchableOpacity>
+        )}
+      />
+    ) : (
+      <Text>No quizzes available. Create one!</Text>
+    )}
+    <TouchableOpacity style={commonStyles.button} onPress={() => navigation.navigate('CreateQuiz')}>
+      <Text style={commonStyles.buttonText}>Create Quiz</Text>
+    </TouchableOpacity>
+    <Text style={commonStyles.genericLabel}>Want to generate quiz with random questions?</Text>
+    <TouchableOpacity style={commonStyles.button} onPress={() => navigation.navigate('GenerateQuizKahoot')}>
+      <Text style={commonStyles.buttonText}>Generate Random Quiz</Text>
+    </TouchableOpacity>
+  </View>
+);
 };
 
+const commonStyles = {
+container: {
+  flex: 1,
+  justifyContent: 'center',
+  alignItems: 'center',
+  padding: 20,
+},
+title: {
+  fontSize: 24,
+  fontWeight: 'bold',
+  marginBottom: 20,
+  textAlign: 'center',
+},
+button: {
+  backgroundColor: 'orange',
+  paddingVertical: 5,
+  paddingHorizontal: 20,
+  height: 40,
+  justifyContent: 'center',
+  alignItems: 'center',
+  borderRadius: 5,
+  marginBottom: 10,
+},
+buttonText: {
+  fontSize: 18,
+  color: '#fff',
+  textAlign: 'center',
+  fontFamily: 'Copperplate',
+},
+genericLabel: {
+  marginBottom: 8,
+},
+};
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20 },
-  header: { fontSize: 24, fontWeight: 'bold', marginBottom: 20 },
-  quizItem: { padding: 10, borderBottomWidth: 1, borderColor: '#ccc' },
+quizItem: {
+  padding: 10,
+  borderBottomWidth: 1,
+  borderColor: '#ccc',
+  width: '100%',
+  textAlign: 'center',
+},
 });
 
 export default SelectQuiz;

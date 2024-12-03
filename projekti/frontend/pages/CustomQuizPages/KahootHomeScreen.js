@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Button } from 'react-native';
+import { View, Text, Button, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { getAuth, onAuthStateChanged, signInAnonymously, deleteUser } from 'firebase/auth';
 
@@ -64,13 +64,49 @@ const KahootHomeScreen = () => {
   };
 
   return (
-    <View>
-      <Text>Welcome to Kahoot Replica</Text>
-      <Button title="Create Lobby" onPress={handleCreateLobby} />
-      <Button title="Join Lobby" onPress={handleJoinLobby} />
-      <Button title="Delete Session" onPress={deleteSession} />
+    <View style={commonStyles.container}>
+      <Text style={commonStyles.title}>Welcome to Kahoot Replica</Text>
+      <TouchableOpacity style={commonStyles.button} onPress={handleCreateLobby}>
+        <Text style={commonStyles.buttonText}>Create Lobby</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={commonStyles.button} onPress={handleJoinLobby}>
+        <Text style={commonStyles.buttonText}>Join Lobby</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={commonStyles.button} onPress={deleteSession}>
+        <Text style={commonStyles.buttonText}>Delete Session</Text>
+      </TouchableOpacity>
     </View>
   );
 };
 
+const commonStyles = {
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  button: {
+    backgroundColor: 'orange',
+    paddingVertical: 5,
+    paddingHorizontal: 20,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 5,
+    marginBottom: 10,
+  },
+  buttonText: {
+    fontSize: 18,
+    color: '#fff',
+    textAlign: 'center',
+    fontFamily: 'Copperplate',
+  },
+};
 export default KahootHomeScreen;

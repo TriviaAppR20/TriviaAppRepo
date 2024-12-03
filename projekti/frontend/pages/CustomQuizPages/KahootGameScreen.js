@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Button } from 'react-native';
+import { View, Text, Button, TouchableOpacity } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { db, auth } from '../../../backend/firebase/firebase';
 import { doc, updateDoc, collection, getDocs, onSnapshot, getDoc, deleteDoc, arrayRemove } from 'firebase/firestore';
@@ -158,19 +158,62 @@ useEffect(() => {
   
 
   return (
-    <View>
-      <Text>Game Code: {gameCode}</Text>
-      <Text>Quiz Title: {quizTitle}</Text>
-      <Text>Countdown: {countdown}</Text>
-      <Text>Players:</Text>
+    <View style={commonStyles.container}>
+      <Text style={commonStyles.title}>Game Code: {gameCode}</Text>
+      <Text style={commonStyles.title}>Quiz Title: {quizTitle}</Text>
+      <Text style={commonStyles.title}>Countdown: {countdown}</Text>
+      <Text style={commonStyles.title}>Players:</Text>
       {players.map((player, index) => (
-        <Text key={index}>{player.playerName}</Text>
+        <Text key={index} style={commonStyles}>{player.playerName}</Text>
       ))}
       {isHost && (
-      <Button title="Start Game" onPress={startGame} disabled={gameStarted} />)}
-      <Button title="Exit Lobby" onPress={exitGame} />
-    </View>
+       <TouchableOpacity
+       style={commonStyles.button}
+       onPress={startGame}
+       disabled={gameStarted}
+     >
+       <Text style={commonStyles.buttonText}>Start Game</Text>
+     </TouchableOpacity>
+   )}
+   <TouchableOpacity
+     style={commonStyles.button}
+     onPress={exitGame}
+   >
+     <Text style={commonStyles.buttonText}>Exit Lobby</Text>
+   </TouchableOpacity>
+ </View>
   );
+};
+
+const commonStyles = {
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  button: {
+    backgroundColor: 'orange',
+    paddingVertical: 5,
+    paddingHorizontal: 20,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 5,
+    marginBottom: 10,
+  },
+  buttonText: {
+    fontSize: 18,
+    color: '#fff',
+    textAlign: 'center',
+    fontFamily: 'Copperplate',
+  },
 };
 
 export default KahootGameScreen;

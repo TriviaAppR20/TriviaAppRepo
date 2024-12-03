@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, Button,TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { db, auth } from '../../../backend/firebase/firebase';
 import { collection, addDoc } from 'firebase/firestore';
 
@@ -124,25 +124,73 @@ const CreateQuiz = ({ navigation }) => {
           onChangeText={text => handleAnswerChange(text, index)}
         />
       ))}
-      <Text>Select the correct answer:</Text>
+      <Text style={styles.genericLabel}>Select the correct answer:</Text>
       {answers.map((answer, index) => (
-        <Button
+        <TouchableOpacity
           key={index}
-          title={answer || `Answer ${index + 1}`}
-          color={correctAnswer === index ? 'green' : 'blue'}
+          style={[styles.button, correctAnswer === index && styles.correctButton]}
           onPress={() => setCorrectAnswer(index)}
-        />
+        >
+          <Text style={styles.buttonText}>{answer || `Answer ${index + 1}`}</Text>
+        </TouchableOpacity>
       ))}
-      <Button title="Save Question" onPress={saveQuestion} />
-      <Button title="Finish Quiz" onPress={finishQuiz} />
+      <TouchableOpacity style={styles.button} onPress={saveQuestion}>
+        <Text style={styles.buttonText}>Save Question</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.button} onPress={finishQuiz}>
+        <Text style={styles.buttonText}>Finish Quiz</Text>
+      </TouchableOpacity>
     </View>
   );
+}
+
+const commonStyles = {
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  button: {
+    backgroundColor: 'orange',
+    paddingVertical: 5,
+    paddingHorizontal: 20,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 5,
+    marginBottom: 10,
+  },
+  buttonText: {
+    fontSize: 18,
+    color: '#fff',
+    textAlign: 'center',
+    fontFamily: 'Copperplate',
+  },
+  genericLabel: {
+    marginBottom: 8,
+  },
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20 },
-  header: { fontSize: 24, fontWeight: 'bold', marginBottom: 10 },
-  input: { height: 40, borderColor: 'gray', borderWidth: 1, padding: 10, marginBottom: 10 }
+  ...commonStyles,
+  input: {
+    height: 40,
+    borderColor: 'gray',
+    borderWidth: 1,
+    padding: 10,
+    marginBottom: 10,
+    width: '80%',
+  },
+  correctButton: {
+    backgroundColor: 'green',
+  },
 });
 
 export default CreateQuiz;

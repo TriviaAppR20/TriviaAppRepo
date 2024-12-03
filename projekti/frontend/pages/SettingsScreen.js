@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { StyleSheet, Text, TextInput, View, Button, Alert } from "react-native";
+import { StyleSheet, Text, TextInput, View, Button, Alert, TouchableOpacity } from "react-native";
 import { 
   getAuth, 
   onAuthStateChanged, 
@@ -94,7 +94,7 @@ useEffect(() => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={commonStyles.container}>
       {user ? (
         <>
           {isAnonymous ? (
@@ -103,7 +103,9 @@ useEffect(() => {
                 You are currently using an anonymous account. Log in to save
                 your data.
               </Text>
-              <Button title="Log In" onPress={handleLogIn} />
+              <TouchableOpacity style={commonStyles.button} onPress={handleLogIn}>
+              <Text style={commonStyles.buttonText}>Log In</Text>
+            </TouchableOpacity>
             </>
           ) : (
             <>
@@ -114,7 +116,9 @@ useEffect(() => {
                 onChangeText={setName}
                 placeholder="Enter your name"
               />
-              <Button title="Save" onPress={handleSave} />
+               <TouchableOpacity style={commonStyles.button} onPress={handleSave}>
+              <Text style={commonStyles.buttonText}>Save</Text>
+            </TouchableOpacity>
               <View style={styles.statsContainer}>
                 <Text style={styles.label}>Your Multiplayer Stats:</Text>
                 {stats ? (
@@ -135,11 +139,9 @@ useEffect(() => {
                 )}
               </View>
               <View style={styles.signOutContainer}>
-                <Button
-                  title="Sign Out"
-                  onPress={handleLogOut}
-                  color="#d9534f"
-                />
+              <TouchableOpacity style={[commonStyles.button, { backgroundColor: "#d9534f" }]} onPress={handleLogOut}>
+                <Text style={commonStyles.buttonText}>Sign Out</Text>
+              </TouchableOpacity>
               </View>
             </>
           )}
@@ -149,11 +151,44 @@ useEffect(() => {
           <Text style={styles.message}>
             You must be logged in to edit your name.
           </Text>
-          <Button title="Login" onPress={() => navigation.navigate("Login")} />
+          <TouchableOpacity style={commonStyles.button} onPress={() => navigation.navigate("Login")}>
+          <Text style={commonStyles.buttonText}>Login</Text>
+        </TouchableOpacity>
         </>
       )}
     </View>
   );
+};
+
+const commonStyles = {
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  button: {
+    backgroundColor: 'orange',
+    paddingVertical: 5,
+    paddingHorizontal: 20,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 5,
+    marginBottom: 10,
+  },
+  buttonText: {
+    fontSize: 18,
+    color: '#fff',
+    textAlign: 'center',
+    fontFamily: 'Copperplate',
+  },
 };
 
 const styles = StyleSheet.create({

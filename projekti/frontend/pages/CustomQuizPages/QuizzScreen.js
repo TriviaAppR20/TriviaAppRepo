@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, Button } from "react-native";
+import { View, Text, Button, StyleSheet, TouchableOpacity } from "react-native";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import { db } from "../../../backend/firebase/firebase";
 import { doc, collection, addDoc, getDoc, getDocs, onSnapshot, updateDoc, deleteDoc, setDoc } from "firebase/firestore";
@@ -412,48 +412,130 @@ const fetchBestPlayer = async () => {
 
 
   return (
-    <View>
+    <View style={commonStyles.container}>
       {!isQuizCompleted ? (
         <>
           {questions.length > 0 && questionIndex < questions.length && (
             <>
-              <Text>{questions[questionIndex].questionText}</Text>
+              <Text style={styles.questionText}>{questions[questionIndex].questionText}</Text>
               {questions[questionIndex].answers.map((answer, index) => (
-                <Button
+                <TouchableOpacity
                   key={index}
-                  title={answer}
+                  style={commonStyles.button}
                   onPress={() => submitAnswer(answer)}
                   disabled={hasAnswered}
-                />
+                >
+                  <Text style={commonStyles.buttonText}>{answer}</Text>
+                </TouchableOpacity>
               ))}
               {showCorrectAnswer && (
-                <Text>The correct answer was: {questions[questionIndex].correctAnswer}</Text>
+                <Text style={styles.correctAnswerText}>
+                  The correct answer was: {questions[questionIndex].correctAnswer}
+                </Text>
               )}
-              <Text>Time left: {timeLeft}</Text>
+              <Text style={styles.timerText}>Time left: {timeLeft}</Text>
             </>
           )}
         </>
       ) : (
         <View>
-          <Text>Quiz Completed!</Text>
+          <Text style={commonStyles.title}>Quiz Completed!</Text>
           {loadingBestPlayer ? (
-            <Text>Loading results...</Text>
+            <Text style={styles.loadingText}>Loading results...</Text>
           ) : bestPlayer ? (
             <>
-              <Text>The BEST player was: {bestPlayer.playerName}</Text>
-              <Text>Final Score: {bestPlayer.finalScore}</Text>
-              <Text>with a Percentage Score: {bestPlayer.percentageScore.toFixed(2)}%</Text>
+              <Text style={styles.bestPlayerText}>The BEST player was: {bestPlayer.playerName}</Text>
+              <Text style={styles.bestPlayerScore}>Final Score: {bestPlayer.finalScore}</Text>
+              <Text style={styles.bestPlayerScore}>
+                with a Percentage Score: {bestPlayer.percentageScore.toFixed(2)}%
+              </Text>
             </>
           ) : (
-            <Text>No players have completed the quiz.</Text>
+            <Text style={styles.noPlayersText}>No players have completed the quiz.</Text>
           )}
-          <Text>Your Score: {score} / {questions.length}</Text>
-          <Text>Percentage: {((score / questions.length) * 100).toFixed(2)}%</Text>
+          <Text style={styles.scoreText}>Your Score: {score} / {questions.length}</Text>
+          <Text style={styles.scoreText}>
+            Percentage: {((score / questions.length) * 100).toFixed(2)}%
+          </Text>
         </View>
       )}
-      <Button title="Exit Game" onPress={exitGame} />
+      <TouchableOpacity style={commonStyles.button} onPress={exitGame}>
+        <Text style={commonStyles.buttonText}>Exit Game</Text>
+      </TouchableOpacity>
     </View>
   );
 };
+
+const commonStyles = {
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  button: {
+    backgroundColor: 'orange',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    height: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 5,
+    marginBottom: 10,
+  },
+  buttonText: {
+    fontSize: 18,
+    color: '#fff',
+    textAlign: 'center',
+    fontFamily: 'Copperplate',
+  },
+};
+
+const styles = StyleSheet.create({
+  questionText: {
+    fontSize: 20,
+    marginBottom: 15,
+    textAlign: 'center',
+  },
+  correctAnswerText: {
+    fontSize: 18,
+    color: 'green',
+    marginTop: 10,
+    marginBottom: 10,
+  },
+  timerText: {
+    fontSize: 16,
+    marginVertical: 10,
+  },
+  loadingText: {
+    fontSize: 18,
+    color: '#333',
+    marginVertical: 10,
+  },
+  bestPlayerText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginVertical: 5,
+  },
+  bestPlayerScore: {
+    fontSize: 18,
+    color: '#555',
+  },
+  noPlayersText: {
+    fontSize: 18,
+    color: 'red',
+    marginVertical: 5,
+  },
+  scoreText: {
+    fontSize: 18,
+    marginVertical: 5,
+  },
+});
 
 export default QuizzScreen;

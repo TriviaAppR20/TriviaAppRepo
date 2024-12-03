@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, TextInput, Button, Alert, StyleSheet, Text } from "react-native";
+import { View, TextInput, Button, Alert, StyleSheet, Text, TouchableOpacity } from "react-native";
 import { auth } from "../../backend/firebase/firebase";
 import {
   createUserWithEmailAndPassword,
@@ -73,7 +73,9 @@ const SignUpScreen = ({ navigation }) => {
         value={password}
         onChangeText={setPassword}
       />
-      <Button title="Sign Up" onPress={handleSignUp} />
+      <TouchableOpacity style={styles.button} onPress={handleSignUp}>
+        <Text style={styles.buttonText}>Sign Up</Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -81,17 +83,38 @@ const SignUpScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
-    padding: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
   },
   header: {
     fontSize: 24,
+    fontWeight: 'bold',
     marginBottom: 20,
+    textAlign: 'center',
   },
   input: {
-    borderBottomWidth: 1,
+    height: 40,
+    borderColor: 'gray',
+    borderWidth: 1,
     marginBottom: 15,
-    padding: 8,
+    paddingHorizontal: 8,
+    width: '100%',
+  },
+  button: {
+    backgroundColor: 'orange',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 5,
+    marginBottom: 10,
+  },
+  buttonText: {
+    fontSize: 18,
+    color: '#fff',
+    textAlign: 'center',
+    fontFamily: 'Copperplate',
   },
 });
 

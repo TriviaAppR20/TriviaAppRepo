@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, Button, Alert } from "react-native";
+import { View, Text, StyleSheet, Button, Alert, TouchableOpacity } from "react-native";
 import Slider from "@react-native-community/slider";
 import { Picker } from "@react-native-picker/picker";
 import { db, auth } from "../../../backend/firebase/firebase";
@@ -226,10 +226,10 @@ export default function GenerateQuizKahoot({ navigation }) {
       </Picker>
 
       <Text>{generateQueryUrl()}</Text>
-      <View style={styles.buttonContainer}>
-        <Button title="START QUIZ" onPress={createGame} />
+      <TouchableOpacity style={styles.button} onPress={createGame}>
+          <Text style={styles.buttonText}>START QUIZ</Text>
+        </TouchableOpacity>
       </View>
-    </View>
   );
 }
 
@@ -280,5 +280,21 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     padding: 20,
+  },
+  button: {
+    backgroundColor: 'orange',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    height: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 5,
+    marginBottom: 10,
+  },
+  buttonText: {
+    fontSize: 18,
+    color: '#fff',
+    textAlign: 'center',
+    fontFamily: 'Copperplate',
   },
 });
