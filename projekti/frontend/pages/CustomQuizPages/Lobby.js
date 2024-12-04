@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, Button, TextInput, StyleSheet } from 'react-native';
+import { View, Text, Button, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { getFirestore, collection, query, where, onSnapshot, addDoc, setDoc, doc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
@@ -110,28 +110,38 @@ const Lobby = () => {
   
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>Lobby</Text>
+    <View style={commonStyles.container}>
+      <Text style={commonStyles.header}>Lobby</Text>
       {isChoosingName ? (
-        <>
+        <View>
           <TextInput
             placeholder="Choose your name"
             value={anonymousName}
             onChangeText={setAnonymousName}
             style={styles.input}
-          />
-          <Button title="Save Name & Join Lobby" onPress={handleSaveNameAndJoin} />
-        </>
+            />
+            <TouchableOpacity
+            style={commonStyles.button}
+            onPress={handleSaveNameAndJoin}
+          >
+            <Text style={commonStyles.buttonText}>Save Name & Join Lobby</Text>
+          </TouchableOpacity>
+        </View>
       ) : (
-        <>
+        <View>
           <TextInput
             placeholder="Enter game code"
             value={gameCode}
             onChangeText={setGameCode}
             style={styles.input}
           />
-          <Button title="Join Lobby" onPress={handleJoinLobby} />
-        </>
+           <TouchableOpacity
+            style={commonStyles.button}
+            onPress={handleJoinLobby}
+          >
+            <Text style={commonStyles.buttonText}>Join Lobby</Text>
+          </TouchableOpacity>
+        </View>
       )}
       {lobbyData && (
         <View>
@@ -143,10 +153,46 @@ const Lobby = () => {
   );
 };
 
+const commonStyles = {
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  button: {
+    backgroundColor: 'orange',
+    paddingVertical: 5,
+    paddingHorizontal: 20,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 5,
+    marginBottom: 10,
+  },
+  buttonText: {
+    fontSize: 18,
+    color: '#fff',
+    textAlign: 'center',
+    fontFamily: 'Copperplate',
+  },
+};
+
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20 },
-  header: { fontSize: 24, marginBottom: 20 },
-  input: { height: 40, borderColor: 'gray', borderWidth: 1, marginBottom: 12, paddingHorizontal: 8 },
+  input: {
+    height: 40,
+    borderColor: 'gray',
+    borderWidth: 1,
+    marginBottom: 12,
+    paddingHorizontal: 8,
+    width: 250,
+  },
 });
 
 export default Lobby;

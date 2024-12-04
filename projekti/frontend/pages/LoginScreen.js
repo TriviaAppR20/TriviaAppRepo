@@ -1,6 +1,6 @@
 import { useNavigation } from "@react-navigation/native";
 import React, { useState } from "react";
-import { View, Text, TextInput, Button, Alert } from "react-native";
+import { View, Text, TextInput, Button, Alert, TouchableOpacity } from "react-native";
 import { auth } from "../../backend/firebase/firebase";
 import { signInWithEmailAndPassword, deleteUser } from "firebase/auth";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -69,21 +69,63 @@ const LoginScreen = () => {
   };
 
   return (
-    <View>
-      <Text>Login</Text>
-      <TextInput placeholder="Email" value={email} onChangeText={setEmail} />
+    <View style={commonStyles.container}>
+      <Text style={commonStyles.title}>Login</Text>
       <TextInput
+        style={{ height: 40, borderColor: 'gray', borderWidth: 1, marginBottom: 10, paddingHorizontal: 8, width: '100%' }}
+        placeholder="Email"
+        value={email}
+        onChangeText={setEmail}
+      />
+      <TextInput
+        style={{ height: 40, borderColor: 'gray', borderWidth: 1, marginBottom: 20, paddingHorizontal: 8, width: '100%' }}
         placeholder="Password"
         secureTextEntry
         value={password}
         onChangeText={setPassword}
       />
-      <Button title="Login" onPress={handleLogin} />
-      <Text>
-        Don't have an account? Sign up <Text onPress={handleSignUp}>here</Text>.
+      <TouchableOpacity style={commonStyles.button} onPress={handleLogin}>
+        <Text style={commonStyles.buttonText}>Login</Text>
+      </TouchableOpacity>
+      <Text style={{ marginTop: 20 }}>
+        Don't have an account? Sign up{' '}
+        <Text style={{ color: 'blue', textDecorationLine: 'underline' }} onPress={handleSignUp}>
+          here
+        </Text>.
       </Text>
     </View>
   );
+};
+
+const commonStyles = {
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  button: {
+    backgroundColor: 'orange',
+    paddingVertical: 5,
+    paddingHorizontal: 20,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 5,
+    marginBottom: 10,
+  },
+  buttonText: {
+    fontSize: 18,
+    color: '#fff',
+    textAlign: 'center',
+    fontFamily: 'Copperplate',
+  },
 };
 
 export default LoginScreen;
