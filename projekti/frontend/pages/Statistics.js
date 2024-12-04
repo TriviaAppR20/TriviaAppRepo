@@ -5,17 +5,31 @@ import { useFocusEffect } from "@react-navigation/native";
 import CustomPicker from "../components/CustomPicker";
 import { DarkModeContext } from "./DarkModeContext";
 import { TouchableOpacity } from "react-native";
+import Icon from "react-native-vector-icons/Ionicons";
+import FAIcon from "react-native-vector-icons/FontAwesome5";
+import { db } from "../../backend/firebase/firebase";
+import { doc, getDoc } from "firebase/firestore";
 
 const Statistics = () => {
   const [stats, setStats] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [isClearStats, setIsClearStats] = useState(false);
+  const [globalQuestions, setGlobalQuestions] = useState([]);
 
   const { isDarkMode } = useContext(DarkModeContext);
+  const textColor = isDarkMode ? "white" : "black";
+
+  const docRef = doc(db, "singleData", "globalData");
 
   const loadStats = async () => {
     try {
       const statsString = await AsyncStorage.getItem("SP_STATS");
+      const statsDoc = await getDoc(docRef);
+      setGlobalQuestions([
+        statsDoc.data().totalQuestions,
+        statsDoc.data().correctAnswers,
+        statsDoc.data().wrongAnswers,
+      ]);
       if (statsString) {
         setStats(JSON.parse(statsString));
       } else {
@@ -77,10 +91,22 @@ const Statistics = () => {
   if (isClearStats) {
     return (
       <View style={[styles.container, isDarkMode ? dark.container : {}]}>
-        <Text style={[styles.clearConfText, {marginBottom: 16}, isDarkMode ? dark.buttonText : {}]}>
+        <Text
+          style={[
+            styles.clearConfText,
+            { marginBottom: 16 },
+            isDarkMode ? dark.buttonText : {},
+          ]}
+        >
           Are you sure you want to clear all your personal stats?
         </Text>
-        <Text style={[styles.clearConfText, {fontSize:16}, isDarkMode ? dark.buttonText : {}]}>
+        <Text
+          style={[
+            styles.clearConfText,
+            { fontSize: 16 },
+            isDarkMode ? dark.buttonText : {},
+          ]}
+        >
           This only applies to your stats locally.
         </Text>
         <View style={styles.clearConfBtnView}>
@@ -92,16 +118,28 @@ const Statistics = () => {
             ]}
             onPress={() => setIsClearStats(false)}
           >
+            <Icon
+              name="arrow-back"
+              size={20}
+              color={textColor}
+              style={{ alignSelf: "center" }}
+            ></Icon>
             <Text
               style={[styles.buttonText, isDarkMode ? dark.buttonText : {}]}
             >
-              Cancel
+              Back
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.clearConfBtn, isDarkMode ? dark.clearConfBtn : {}]}
             onPress={() => clearStats()}
           >
+            <Icon
+              name="trash"
+              size={20}
+              color={textColor}
+              style={{ alignSelf: "center" }}
+            ></Icon>
             <Text
               style={[styles.buttonText, isDarkMode ? dark.buttonText : {}]}
             >
@@ -134,7 +172,7 @@ const Statistics = () => {
         selectedValue={selectedCategory}
         onSelect={setSelectedCategory}
         styles={[pickerStyles, isDarkMode ? darkPickerStyles : {}]}
-        iconColor={isDarkMode ? "white" : "black"}
+        iconColor={textColor}
       />
       {selectedCategory === "All" ? (
         <View
@@ -146,12 +184,12 @@ const Statistics = () => {
           <Text
             style={[styles.categoryTitle, isDarkMode ? dark.categoryTitle : {}]}
           >
-            Total Statistics
+            Your Statistics
           </Text>
           <Text
             style={[styles.summaryText, isDarkMode ? dark.summaryText : {}]}
           >
-            Total Guesses: {totalGuesses} -{" "}
+            Total: {totalGuesses} -{" "}
             <Text style={[styles.correct, isDarkMode ? dark.correct : {}]}>
               {totalCorrect}
             </Text>{" "}
@@ -250,6 +288,33 @@ const Statistics = () => {
           Reset personal stats
         </Text>
       </TouchableOpacity>
+      <View style={styles.globalStatsView}>
+        <Text
+          style={[styles.categoryTitle, isDarkMode ? dark.categoryTitle : {}]}
+        >
+          Global Statistics
+        </Text>
+        <Text style={[styles.summaryText, isDarkMode ? dark.summaryText : {}]}>
+          Total: {globalQuestions[0]} -{" "}
+          <Text style={[styles.correct, isDarkMode ? dark.correct : {}]}>
+            {globalQuestions[1]}
+          </Text>{" "}
+          -{" "}
+            <Text style={[styles.incorrect, isDarkMode ? dark.incorrect : {}]}>
+              {globalQuestions[2]}
+            </Text>
+        </Text>
+        <Text style={[styles.summaryText, isDarkMode ? dark.summaryText : {}]}>
+          Percentage: {" "}
+          <Text style={[styles.correct, isDarkMode ? dark.correct : {}]}>
+            {Math.round(globalQuestions[1] / globalQuestions[0] * 100)}%
+          </Text>{" "}
+          -{" "}
+          <Text style={[styles.incorrect, isDarkMode ? dark.incorrect : {}]}>
+            {Math.round(globalQuestions[2] / globalQuestions[0] * 100)}%
+          </Text>
+        </Text>
+      </View>
     </ScrollView>
   );
 };
@@ -273,9 +338,6 @@ const styles = StyleSheet.create({
     paddingVertical: 32,
   },
   categoryContainer: {
-    marginBottom: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: "#ddd",
     paddingBottom: 10,
   },
   categoryTitle: {
@@ -336,6 +398,20 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFF",
     marginBottom: 24,
     width: "40%",
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 8,
+  },
+  globalStatsView: {
+    marginTop: 24,
+    borderTopWidth: 1,
+    borderColor: "#ffd6b3",
+    paddingTop: 20,
+  },
+  globalStatsText: {
+    color: "white",
   },
 });
 

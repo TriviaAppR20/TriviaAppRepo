@@ -12,7 +12,7 @@ import { DarkModeContext } from "./DarkModeContext";
 import CustomProgressBar from "../components/CustomProgressBar";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { db } from "../../backend/firebase/firebase";
-import { doc, collection, addDoc, getDoc, getDocs, onSnapshot, updateDoc, deleteDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 
 export default function GameScreen({ route, navigation }) {
   const { questions } = route.params;
