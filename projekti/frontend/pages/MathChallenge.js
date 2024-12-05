@@ -88,7 +88,7 @@ const MathChallenge = () => {
     setShowFeedback(true);
     if (parseFloat(userAnswer) === answer) {
       setIsCorrect(true);
-      setStreak((prev) => (prev + 1));
+      setStreak((prev) => prev + 1);
       setTimeout(() => {
         generateQuestion();
         setShowFeedback(false);
@@ -184,7 +184,12 @@ const MathChallenge = () => {
           </TouchableOpacity>
         </View>
       </View>
-      <View style={styles.questionContainer}>
+      <View
+        style={[
+          styles.questionContainer,
+          isDarkMode ? dark.questionContainer : {},
+        ]}
+      >
         <TouchableOpacity onPress={generateQuestion} style={styles.button}>
           <Icon name="refresh" color={color} size={20}></Icon>
         </TouchableOpacity>
@@ -193,7 +198,13 @@ const MathChallenge = () => {
         </Text>
       </View>
 
-      <View style={[styles.questionContainer, { marginTop: 24, width: "80%" }]}>
+      <View
+        style={[
+          styles.questionContainer,
+          { marginTop: 24, width: "80%" },
+          isDarkMode ? dark.questionContainer : {},
+        ]}
+      >
         <TouchableOpacity onPress={checkAnswer} style={styles.button}>
           <Icon name="enter" color={color} size={20}></Icon>
         </TouchableOpacity>
@@ -315,7 +326,7 @@ const dark = StyleSheet.create({
   },
   questionContainer: {
     backgroundColor: "black",
-  }
+  },
 });
 
 export default MathChallenge;
