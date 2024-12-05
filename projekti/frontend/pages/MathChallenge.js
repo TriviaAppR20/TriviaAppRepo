@@ -272,7 +272,7 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     borderWidth: 1,
     borderColor: orange,
-    backgroundColor: "black",
+    backgroundColor: "white",
     position: "relative",
     height: 65,
   },
@@ -313,6 +313,9 @@ const dark = StyleSheet.create({
   input: {
     color: "#FFF",
   },
+  questionContainer: {
+    backgroundColor: "black",
+  }
 });
 
 export default MathChallenge;
