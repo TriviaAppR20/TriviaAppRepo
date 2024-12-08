@@ -8,20 +8,35 @@ import { TouchableOpacity } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import FAIcon from "react-native-vector-icons/FontAwesome5";
 import { db } from "../../backend/firebase/firebase";
-import { doc, getDoc } from "firebase/firestore";
+import { 
+  getAuth, 
+  onAuthStateChanged, 
+  updateProfile, 
+  signInWithCredential, 
+  signOut, 
+  signInAnonymously
+} from "firebase/auth";
+import { collection, query, where, getDoc, addDoc, setDoc, doc, onSnapshot } from 'firebase/firestore';
+import performanceService from "../components/PerformanceService";
 
-const Statistics = () => {
+const Statistics = ({userId}) => {
   const [stats, setStats] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [isClearStats, setIsClearStats] = useState(false);
   const [globalQuestions, setGlobalQuestions] = useState([]);
+
+  const [multiplayerStats, setMultiplayerStats] = useState(null)
+  const [user, setUser] = useState(null);
+  const [isAnonymous, setIsAnonymous] = useState(false);
 
   const { isDarkMode } = useContext(DarkModeContext);
   const textColor = isDarkMode ? "white" : "black";
 
   const docRef = doc(db, "singleData", "globalData");
 
-  const loadStats = async () => {
+  const auth = getAuth();
+
+  const loadStats = async (user, isAnonymous) => {
     try {
       const statsString = await AsyncStorage.getItem("SP_STATS");
       const statsDoc = await getDoc(docRef);
@@ -35,11 +50,41 @@ const Statistics = () => {
       } else {
         setStats(null);
       }
+      if (!isAnonymous) {
+        performanceService.setUserId(user);
+        await performanceService.loadStats(user);
+        setMultiplayerStats(performanceService.getStats());
+      }
+
     } catch (error) {
       console.error("Error loading statistics:", error);
       setStats(null);
     }
+  
+
   };
+
+
+  //handles the auth state change
+//aka checks if the user is logged in or not
+const handleAuthStateChange = async = () => {
+  const auth = getAuth();
+  const unsubscribe = onAuthStateChanged(auth, async (currentUser)=> {
+   if (currentUser && !currentUser.isAnonymous) {
+       setUser(currentUser);
+       setIsAnonymous(false);
+       await loadStats(currentUser.uid, currentUser.isAnonymous);
+   } else {
+     setUser(currentUser);
+     setIsAnonymous(true);
+     setMultiplayerStats(null)
+     await loadStats(currentUser.uid, currentUser.isAnonymous);
+   }
+  })
+  return unsubscribe;
+};
+
+
 
   const clearStats = async () => {
     try {
@@ -72,9 +117,12 @@ const Statistics = () => {
     };
   };
 
+  //calls to handleAuthStateChane first, then calls loadStats
+  // so that the user is loaded before the stats are loaded
   useFocusEffect(
     useCallback(() => {
-      loadStats();
+      const unsubscribe = handleAuthStateChange();
+      return () => unsubscribe();
     }, [])
   );
 
@@ -164,6 +212,7 @@ const Statistics = () => {
     selectedCategory === "All"
       ? null // Indicating we should display total stats
       : { [selectedCategory]: stats[selectedCategory] };
+
 
   return (
     <ScrollView style={[styles.scrollView, isDarkMode ? dark.scrollView : {}]}>
@@ -300,20 +349,47 @@ const Statistics = () => {
             {globalQuestions[1]}
           </Text>{" "}
           -{" "}
-            <Text style={[styles.incorrect, isDarkMode ? dark.incorrect : {}]}>
-              {globalQuestions[2]}
-            </Text>
+          <Text style={[styles.incorrect, isDarkMode ? dark.incorrect : {}]}>
+            {globalQuestions[2]}
+          </Text>
         </Text>
         <Text style={[styles.summaryText, isDarkMode ? dark.summaryText : {}]}>
-          Percentage: {" "}
+          Percentage:{" "}
           <Text style={[styles.correct, isDarkMode ? dark.correct : {}]}>
-            {Math.round(globalQuestions[1] / globalQuestions[0] * 100)}%
+            {Math.round((globalQuestions[1] / globalQuestions[0]) * 100)}%
           </Text>{" "}
           -{" "}
           <Text style={[styles.incorrect, isDarkMode ? dark.incorrect : {}]}>
-            {Math.round(globalQuestions[2] / globalQuestions[0] * 100)}%
+            {Math.round((globalQuestions[2] / globalQuestions[0]) * 100)}%
           </Text>
         </Text>
+      </View>
+      <View style={styles.globalStatsView}>
+        <Text
+        style={[styles.categoryTitle, isDarkMode ? dark.categoryTitle : {}]}
+        >
+          Multiplayer statistics
+        </Text>
+        {multiplayerStats ? (
+          <>
+           <Text style={[styles.summaryText, isDarkMode ? dark.summaryText : {}]}>
+            Total answers: {multiplayerStats.totalAnswers}
+           </Text>
+           <Text style={[styles.summaryText, isDarkMode ? dark.summaryText : {}]}>
+            Correct answers: {multiplayerStats.correctAnswers}
+           </Text>
+           <Text style={[styles.summaryText, isDarkMode ? dark.summaryText : {}]}>
+            Correct precentage: {multiplayerStats.correctPercentage.toFixed(2)}%
+           </Text>
+           <Text style={[styles.summaryText, isDarkMode ? dark.summaryText : {}]}>
+            Games won: {multiplayerStats.gamesWon}
+           </Text>
+          </>
+        ): (
+          <Text style={[styles.summaryText, isDarkMode ? dark.summaryText : {}]}>
+            Please log in to view multiplayer stats...
+          </Text>
+        )}
       </View>
     </ScrollView>
   );
