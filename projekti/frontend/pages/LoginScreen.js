@@ -2,7 +2,7 @@ import { useNavigation } from "@react-navigation/native";
 import React, { useState } from "react";
 import { View, Text, TextInput, Button, Alert, TouchableOpacity } from "react-native";
 import { auth } from "../../backend/firebase/firebase";
-import { signInWithEmailAndPassword, deleteUser } from "firebase/auth";
+import { signInWithEmailAndPassword, deleteUser, getAuth, updateCurrentUser } from "firebase/auth";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const LoginScreen = () => {
@@ -30,14 +30,13 @@ const LoginScreen = () => {
   // - Navigates to Home screen upon successful authentication
   const handleLogin = async () => {
     try {
+      const auth = getAuth();	
       const currentUser = auth.currentUser;
       
-      // Remove anonymous user if present before logging in
+      //saved for later
       if (currentUser?.isAnonymous) {
-        const anonymousUid = currentUser.uid;
-        // Delete the anonymous user
-        await deleteUser(currentUser);
-        console.log("Anonymous user deleted:", anonymousUid);
+        await AsyncStorage.setItem('ANONYMOUS_USER_ID', currentUser.uid)
+        console.log("Anonymous user saved:", currentUser.uid);
       }
 
        // Authenticate user with Firebase
@@ -51,6 +50,7 @@ const LoginScreen = () => {
       await AsyncStorage.setItem("email", email);
       await AsyncStorage.setItem("password", password);
 
+      await updateCurrentUser(auth, userCredential.user);
 
       console.log("email/password Logged in:", userCredential.user.uid);
       Alert.alert("Logged in successfully");

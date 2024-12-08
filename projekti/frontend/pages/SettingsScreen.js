@@ -10,13 +10,13 @@ import {
   signInAnonymously
 } from "firebase/auth";
 import { CommonActions } from "@react-navigation/native";
-import performanceService from "../components/PerformanceService";
+
 
 const SettingsScreen = ({ navigation }) => {
   const [name, setName] = useState("");
   const [user, setUser] = useState(null);
   const [isAnonymous, setIsAnonymous] = useState(false);
-  const [stats, setStats] = useState(null); // Initialize stats as null
+
 
   const auth = getAuth();
 
@@ -39,17 +39,6 @@ const SettingsScreen = ({ navigation }) => {
   }, []);
 
   
-// Loads stats after ensuring the user is authenticated
-useEffect(() => {
-  const fetchStats = async () => {
-    if (!user || !user.uid) return;
-    performanceService.setUserId(user.uid); // Ensure the userId is set
-    await performanceService.loadStats(); // Load stats from Firestore
-    setStats(performanceService.getStats()); // Update state with latest stats
-  };
-
-  fetchStats();
-}, [user]); // Ensure this re-runs if user changes
 
   const handleSave = async () => {
     if (!user) {
@@ -67,6 +56,8 @@ useEffect(() => {
 
   const handleLogOut = async () => {
     try {
+      const auth = getAuth();
+      const currentUser = auth.currentUser;
       await signOut(auth);
       Alert.alert("Success", "You have been signed out.");
 
@@ -82,8 +73,20 @@ useEffect(() => {
       );
 
       // Sign in anonymously
-      const anonymousUser = await signInAnonymously(auth);
-      console.log("Signed in anonymously:", anonymousUser.user.uid);
+      const anonymousUserId = await AsyncStorage.getItem('ANONYMOUS_USER_ID');
+      if (anonymousUserId) {
+        // Sign in anonymously and set the anonymous user ID
+        const userCredential = await signInAnonymously(auth);
+        if (userCredential.user.uid !== anonymousUserId) {
+          console.log("Reassigned anonymous user ID:", anonymousUserId);
+
+          //this broke for some reason, code still works just gives errors
+         // await updateCurrentUser(auth, { ...userCredential.user, uid: anonymousUserId });
+        }
+      } else {
+        // If no anonymous user ID is saved, sign in anonymously
+        await signInAnonymously(auth);
+      }
     } catch (error) {
       Alert.alert("Error", error.message);
     }
@@ -100,12 +103,11 @@ useEffect(() => {
           {isAnonymous ? (
             <>
               <Text style={styles.message}>
-                You are currently using an anonymous account. Log in to save
-                your data.
+                You are currently using an anonymous account. Log in to save your data.
               </Text>
               <TouchableOpacity style={commonStyles.button} onPress={handleLogIn}>
-              <Text style={commonStyles.buttonText}>Log In</Text>
-            </TouchableOpacity>
+                <Text style={commonStyles.buttonText}>Log In</Text>
+              </TouchableOpacity>
             </>
           ) : (
             <>
@@ -116,32 +118,16 @@ useEffect(() => {
                 onChangeText={setName}
                 placeholder="Enter your name"
               />
-               <TouchableOpacity style={commonStyles.button} onPress={handleSave}>
-              <Text style={commonStyles.buttonText}>Save</Text>
-            </TouchableOpacity>
-              <View style={styles.statsContainer}>
-                <Text style={styles.label}>Your Multiplayer Stats:</Text>
-                {stats ? (
-                  <>
-                    <Text>Total Answers: {stats.totalAnswers}</Text>
-                    <Text>Correct Answers: {stats.correctAnswers}</Text>
-                    <Text>
-                      Correct Percentage:{" "}
-                      {stats.correctPercentage
-                        ? stats.correctPercentage.toFixed(2)
-                        : 0}
-                      %
-                    </Text>
-                    <Text>Games Won: {stats.gamesWon}</Text>
-                  </>
-                ) : (
-                  <Text>Loading stats...</Text>
-                )}
-              </View>
-              <View style={styles.signOutContainer}>
-              <TouchableOpacity style={[commonStyles.button, { backgroundColor: "#d9534f" }]} onPress={handleLogOut}>
-                <Text style={commonStyles.buttonText}>Sign Out</Text>
+              <TouchableOpacity style={commonStyles.button} onPress={handleSave}>
+                <Text style={commonStyles.buttonText}>Save</Text>
               </TouchableOpacity>
+              <View style={styles.signOutContainer}>
+                <TouchableOpacity
+                  style={[commonStyles.button, { backgroundColor: "#d9534f" }]}
+                  onPress={handleLogOut}
+                >
+                  <Text style={commonStyles.buttonText}>Sign Out</Text>
+                </TouchableOpacity>
               </View>
             </>
           )}
@@ -151,9 +137,12 @@ useEffect(() => {
           <Text style={styles.message}>
             You must be logged in to edit your name.
           </Text>
-          <TouchableOpacity style={commonStyles.button} onPress={() => navigation.navigate("Login")}>
-          <Text style={commonStyles.buttonText}>Login</Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={commonStyles.button}
+            onPress={() => navigation.navigate("Login")}
+          >
+            <Text style={commonStyles.buttonText}>Login</Text>
+          </TouchableOpacity>
         </>
       )}
     </View>
