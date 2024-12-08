@@ -65,27 +65,37 @@ useEffect(() => {
     }
   };
 
+ 
   const handleLogOut = async () => {
     try {
+      const auth = getAuth();
+      const currentUser = auth.currentUser;
+  
+      // Sign out the current user
       await signOut(auth);
-      Alert.alert("Success", "You have been signed out.");
+  
+      // Retrieve the saved anonymous user ID
+      const anonymousUserId = await AsyncStorage.getItem('ANONYMOUS_USER_ID');
+  
+      if (anonymousUserId) {
+        // Sign in anonymously and set the anonymous user ID
+        const userCredential = await signInAnonymously(auth);
+        if (userCredential.user.uid !== anonymousUserId) {
+          console.log("Reassigned anonymous user ID:", anonymousUserId);
 
-      await AsyncStorage.removeItem("email");
-      await AsyncStorage.removeItem("password");
-
-      // Reset the navigation stack
-      navigation.dispatch(
-        CommonActions.reset({
-          index: 0,
-          routes: [{ name: "Home" }],
-        })
-      );
-
-      // Sign in anonymously
-      const anonymousUser = await signInAnonymously(auth);
-      console.log("Signed in anonymously:", anonymousUser.user.uid);
+          //this broke for some reason, code still works just gives errors
+         // await updateCurrentUser(auth, { ...userCredential.user, uid: anonymousUserId });
+        }
+      } else {
+        // If no anonymous user ID is saved, sign in anonymously
+        await signInAnonymously(auth);
+      }
+  
+      // Navigate to the login screen or another appropriate screen
+      navigation.navigate('Login');
     } catch (error) {
-      Alert.alert("Error", error.message);
+      console.error("Error logging out:", error);
+      alert("Failed to log out. Please try again.");
     }
   };
 

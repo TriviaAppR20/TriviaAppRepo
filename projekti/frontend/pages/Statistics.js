@@ -8,42 +8,111 @@ import { TouchableOpacity } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import FAIcon from "react-native-vector-icons/FontAwesome5";
 import { db } from "../../backend/firebase/firebase";
-import { doc, getDoc } from "firebase/firestore";
+import { 
+  getAuth, 
+  onAuthStateChanged, 
+  updateProfile, 
+  signInWithCredential, 
+  signOut, 
+  signInAnonymously
+} from "firebase/auth";
+import { collection, query, where, getDoc, addDoc, setDoc, doc, onSnapshot } from 'firebase/firestore';
+import performanceService from "../components/PerformanceService";
 
-const Statistics = () => {
+const Statistics = ({userId}) => {
   const [stats, setStats] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [isClearStats, setIsClearStats] = useState(false);
   const [globalQuestions, setGlobalQuestions] = useState([]);
+  const [multiplayerStats, setMultiplayerStats] = useState(null)
+  const [user, setUser] = useState(null);
+  const [isAnonymous, setIsAnonymous] = useState(false);
+
 
   const { isDarkMode } = useContext(DarkModeContext);
   const textColor = isDarkMode ? "white" : "black";
 
   const docRef = doc(db, "singleData", "globalData");
+  //console.log("stats page userId:", user);
 
-  const loadStats = async () => {
+
+  //modified to take in user and isAnonymous
+  //so that the user can be passed in from the handleAuthStateChange
+  //statsKey works like this:
+  //if the user is anonymous, the key is SP_STATS_ANONYMOUS
+  //if the user is not anonymous, the key is SP_STATS_{userId}
+  //this is fetched from the async storage
+  const loadStats = async (user, isAnonymous) => {
     try {
-      const statsString = await AsyncStorage.getItem("SP_STATS");
+      console.log("Starting loadStats...");
+      console.log("Params:", { user, isAnonymous });
+  
+      //but the fucking userId is passed here and finds the corresponding user
+      //makes no fucking sense
+      const statsKey = isAnonymous ? "SP_STATS_ANONYMOUS" : `SP_STATS_${userId}`;
+      console.log("Using statsKey:", statsKey);
+  
+      const statsString = await AsyncStorage.getItem(statsKey);
+      console.log("Retrieved statsString from AsyncStorage:", statsString);
+  
+      const docRef = doc(db, "singleData", "globalData");
       const statsDoc = await getDoc(docRef);
-      setGlobalQuestions([
-        statsDoc.data().totalQuestions,
-        statsDoc.data().correctAnswers,
-        statsDoc.data().wrongAnswers,
-      ]);
+  
+      if (statsDoc.exists()) {
+        const globalStats = statsDoc.data();
+        setGlobalQuestions([
+          globalStats.totalQuestions || 0,
+          globalStats.correctAnswers || 0,
+          globalStats.wrongAnswers || 0,
+        ]);
+        console.log("Global stats loaded:", globalStats);
+      } else {
+        console.warn("Firestore stats document does not exist!");
+        setGlobalQuestions([0, 0, 0]);
+      }
+  
       if (statsString) {
         setStats(JSON.parse(statsString));
       } else {
+        console.warn("No stats found in AsyncStorage for key:", statsKey);
         setStats(null);
+      }
+      //user id is undefined here but is found as user in here
+      console.log(userId)
+      if (!isAnonymous) {
+        performanceService.setUserId(user);
+        await performanceService.loadStats(user);
+        setMultiplayerStats(performanceService.getStats());
       }
     } catch (error) {
       console.error("Error loading statistics:", error);
       setStats(null);
     }
   };
+  
+//handles the auth state change
+//aka checks if the user is logged in or not
+  const handleAuthStateChange = async = () => {
+     const auth = getAuth();
+     const unsubscribe = onAuthStateChanged(auth, async (currentUser)=> {
+      if (currentUser && !currentUser.isAnonymous) {
+          setUser(currentUser);
+          setIsAnonymous(false);
+          await loadStats(currentUser.uid, currentUser.isAnonymous);
+      } else {
+        setUser(currentUser);
+        setIsAnonymous(true);
+        setMultiplayerStats(null)
+        await loadStats(currentUser.uid, currentUser.isAnonymous);
+      }
+     })
+     return unsubscribe;
+  };
 
-  const clearStats = async () => {
+  const clearStats = async (userId, isAnonymous) => {
     try {
-      await AsyncStorage.removeItem("SP_STATS");
+      const statsKey = isAnonymous ? "SP_STATS_ANONYMOUS" : `SP_STATS_${userId}`;
+      await AsyncStorage.removeItem(statsKey);
       setStats(null);
       alert("All stats have been deleted.");
     } catch (error) {
@@ -72,9 +141,12 @@ const Statistics = () => {
     };
   };
 
+  //calls to handleAuthStateChane first, then calls loadStats
+  // so that the user is loaded before the stats are loaded
   useFocusEffect(
     useCallback(() => {
-      loadStats();
+      const unsubscribe = handleAuthStateChange();
+      return () => unsubscribe();
     }, [])
   );
 
@@ -314,6 +386,33 @@ const Statistics = () => {
             {Math.round(globalQuestions[2] / globalQuestions[0] * 100)}%
           </Text>
         </Text>
+      </View>
+      <View style={styles.globalStatsView}>
+        <Text
+        style={[styles.categoryTitle, isDarkMode ? dark.categoryTitle : {}]}
+        >
+          Multiplayer statistics
+        </Text>
+        {multiplayerStats ? (
+          <>
+           <Text style={[styles.summaryText, isDarkMode ? dark.summaryText : {}]}>
+            Total answers: {multiplayerStats.totalAnswers}
+           </Text>
+           <Text style={[styles.summaryText, isDarkMode ? dark.summaryText : {}]}>
+            Correct answers: {multiplayerStats.correctAnswers}
+           </Text>
+           <Text style={[styles.summaryText, isDarkMode ? dark.summaryText : {}]}>
+            Correct precentage: {multiplayerStats.correctPercentage.toFixed(2)}%
+           </Text>
+           <Text style={[styles.summaryText, isDarkMode ? dark.summaryText : {}]}>
+            Games won: {multiplayerStats.gamesWon}
+           </Text>
+          </>
+        ): (
+          <Text style={[styles.summaryText, isDarkMode ? dark.summaryText : {}]}>
+            Please log in to view multiplayer stats...
+          </Text>
+        )}
       </View>
     </ScrollView>
   );

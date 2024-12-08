@@ -12,6 +12,7 @@ import { DarkModeContext } from "./DarkModeContext";
 import CustomProgressBar from "../components/CustomProgressBar";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { db } from "../../backend/firebase/firebase";
+import { getAuth } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 
 export default function GameScreen({ route, navigation }) {
@@ -28,12 +29,15 @@ export default function GameScreen({ route, navigation }) {
   const [answerStatus, setAnswerStatus] = useState([]);
   const [progressBarTrigger, setProgressBarTrigger] = useState(false);
   const [savingDone, setSavingDone] = useState(false);
+  const [userId, setUserId] = useState(null);
+  const [isAnonymous, setIsAnonymous] = useState(false);
 
   const currentQuestion = questions[currentQuestionIndex];
   const categories = questions.map((question) => question.category);
   const difficulties = questions.map((question) => question.difficulty);
 
   const { isDarkMode } = useContext(DarkModeContext);
+
 
   useEffect(() => {
     const allAnswers = [
@@ -65,8 +69,11 @@ export default function GameScreen({ route, navigation }) {
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     } else {
-      setTimeout(saveStats, 1000)
+      // passing the userId and isAnonymous to saveStats function
+      setTimeout(async () => {
+      await saveStats(userId, isAnonymous);
       setGameEnded(true);
+      }, 2000);
     }
   };
 
@@ -83,10 +90,42 @@ export default function GameScreen({ route, navigation }) {
     }
   };
 
-  const saveStats = async () => {
+  //useEffect to get the userId and isAnonymous from firebase auth
+  //I hate using useEffect for this everytime
+  //should be passed from app.js to every screen
+  //as params in the navigation thingy or something
+  useEffect(() => {
+    const auth = getAuth();
+    const currentUser = auth.currentUser;
+
+    if (currentUser) {
+      setUserId(currentUser.uid);
+      setIsAnonymous(currentUser.isAnonymous);
+    }
+  }, []);
+
+  //googoo gaagaa
+  // this is modified to handle async storage
+  // so that it knows if the user is anonymous or not
+  // using a statsKey to store the stats
+  const saveStats = async (userId, isAnonymous) => {
     try {
-      const statsString = await AsyncStorage.getItem("SP_STATS");
-      const stats = statsString ? JSON.parse(statsString) : {};
+
+      const statsKey = isAnonymous ? "SP_STATS_ANONYMOUS" : `SP_STATS_${userId}`;
+      const statsString = await AsyncStorage.getItem(statsKey);
+
+      //some handling for the stats
+    let stats;
+    if (statsString) {
+      try {
+        stats = JSON.parse(statsString);
+      } catch (error) {
+        console.error("Failed to parse stats:", error);
+        stats = {};
+      }
+    } else {
+      stats = {};
+    }
 
       for (let i = 0; i < categories.length; i++) {
         const category = decode(categories[i]);
@@ -133,12 +172,23 @@ export default function GameScreen({ route, navigation }) {
       } catch (err) {
         console.log("Error: ", err)
       }
-      await AsyncStorage.setItem("SP_STATS", JSON.stringify(stats));
+      //modified here also, rest of it should be the same I think..
+      await AsyncStorage.setItem(statsKey, JSON.stringify(stats));
+
+      console.log("Stats saved successfully!", stats);
+      console.log(userId)
+      console.log(statsKey)
+
       setSavingDone(true);
     } catch (err) {
       console.error("Failed to save stats: ", err);
     }
   };
+  
+  
+  
+  
+  
 
   if (gameEnded && savingDone) {
     return (
