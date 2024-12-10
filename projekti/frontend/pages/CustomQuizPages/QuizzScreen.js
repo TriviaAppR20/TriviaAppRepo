@@ -481,9 +481,8 @@ const commonStyles = {
   },
   button: {
     backgroundColor: 'orange',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    height: 50,
+    width: '50%', 
+    height: 50, 
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 5,
@@ -494,6 +493,7 @@ const commonStyles = {
     color: '#fff',
     textAlign: 'center',
     fontFamily: 'Copperplate',
+    flexShrink: 1, 
   },
 };
 
