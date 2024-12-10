@@ -34,9 +34,9 @@ export default function HomeScreen() {
         <Text style={[styles.title, styles.secondaryTitle]}>Wanna play with your friends?</Text>
         <TouchableOpacity
           style={styles.button}
-          onPress={() => navigation.navigate("KahootHomeScreen")}
+          onPress={() => navigation.navigate("Multiplayer")}
         >
-          <Text style={styles.buttonText}>Kähööt 🤝</Text>
+          <Text style={styles.buttonText}>Host or Join 🤝</Text>
         </TouchableOpacity>
       </View>
 
