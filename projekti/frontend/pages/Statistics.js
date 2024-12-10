@@ -379,7 +379,7 @@ const handleAuthStateChange = async = () => {
             Correct answers: {multiplayerStats.correctAnswers}
            </Text>
            <Text style={[styles.summaryText, isDarkMode ? dark.summaryText : {}]}>
-            Correct precentage: {multiplayerStats.correctPercentage.toFixed(2)}%
+            Correct percentage: {multiplayerStats.correctPercentage.toFixed(2)}%
            </Text>
            <Text style={[styles.summaryText, isDarkMode ? dark.summaryText : {}]}>
             Games won: {multiplayerStats.gamesWon}
