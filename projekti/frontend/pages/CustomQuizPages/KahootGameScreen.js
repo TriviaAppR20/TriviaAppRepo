@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Button, TouchableOpacity } from 'react-native';
+import { View, Text, Button, TouchableOpacity, StyleSheet } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { db, auth } from '../../../backend/firebase/firebase';
 import { doc, updateDoc, collection, getDocs, onSnapshot, getDoc, deleteDoc, arrayRemove } from 'firebase/firestore';
@@ -168,7 +168,7 @@ useEffect(() => {
       ))}
       {isHost && (
        <TouchableOpacity
-       style={commonStyles.button}
+       style={[commonStyles.button, gameStarted && styles.disabledButton,]}
        onPress={startGame}
        disabled={gameStarted}
      >
@@ -214,5 +214,11 @@ const commonStyles = {
     fontFamily: 'Copperplate',
   },
 };
+
+const styles = StyleSheet.create({
+  disabledButton: {
+    backgroundColor: 'gray', // Change the button's background color to gray
+  },
+});
 
 export default KahootGameScreen;
