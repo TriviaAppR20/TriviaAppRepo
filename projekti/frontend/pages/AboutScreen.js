@@ -18,7 +18,7 @@ const AboutScreen = () => {
                 Welcome to the Trivia App! This app is designed to provide you with fun and challenging trivia questions. 
                 Enjoy playing and learning new facts!
                 {'\n\n'} This project was created in fall 2024 by Group 20 for the course
-                "Mobiilikehitysprojekti" in Oulu University of Applied Sciences. (OAMK)
+                "Mobiilikehitysprojekti" in Oulu University of Applied Sciences. (OUAS)
             </Text>
         </View>
     );
