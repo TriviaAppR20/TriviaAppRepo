@@ -147,9 +147,8 @@ title: {
 },
 button: {
   backgroundColor: 'orange',
-  paddingVertical: 5,
-  paddingHorizontal: 20,
-  height: 40,
+  width: '50%', 
+  height: 50, 
   justifyContent: 'center',
   alignItems: 'center',
   borderRadius: 5,
