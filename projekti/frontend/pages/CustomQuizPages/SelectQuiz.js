@@ -94,7 +94,7 @@ const createLobbyAndNavigate = async (quiz) => {
       console.log('Player added to the game:', playerId, playerName);
     }
 
-    navigation.navigate('KahootGameScreen', {  // Navigate to game screen
+    navigation.navigate('Game Lobby', {  // Navigate to game screen
       gameCode,
       quizTitle: quiz.quizTitle,
       gameId: gameDocRef.id,
@@ -158,7 +158,6 @@ buttonText: {
   fontSize: 18,
   color: '#fff',
   textAlign: 'center',
-  fontFamily: 'Copperplate',
 },
 genericLabel: {
   marginBottom: 8,

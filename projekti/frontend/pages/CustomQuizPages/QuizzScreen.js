@@ -338,7 +338,7 @@ const QuizzScreen = () => {
     } catch (error) {
       console.error("Error deleting game:", error);
     }
-    navigation.navigate("KahootHomeScreen");
+    navigation.navigate("Multiplayer");
   };
 
   //delete generated quiz is missing,
@@ -416,17 +416,17 @@ const QuizzScreen = () => {
             // If the current user is the creator, delete the entire game document
             await deleteDoc(gameDocRef);
             console.log("Game deleted:", gameId);
-            navigation.navigate("KahootHomeScreen"); // Redirect after game deletion
+            navigation.navigate("Multiplayer"); // Redirect after game deletion
             return;
           }
         } else {
           console.error("Game document not found:", gameId);
-          navigation.navigate("KahootHomeScreen");
+          navigation.navigate("Multiplayer");
           return; // Exit if the game document is missing
         }
       } catch (error) {
         //made sure that non host can exit the game regardless what has happened
-        navigation.navigate("KahootHomeScreen");
+        navigation.navigate("Multiplayer");
         console.error(
           "Error while checking/deleting game document:",
           error.message || error
@@ -438,7 +438,7 @@ const QuizzScreen = () => {
         const playerDocRef = doc(db, "games", gameId, "players", playerId); // Referencing with playerId as document ID
         await deleteDoc(playerDocRef);
         console.log(`Player document ${playerId} removed from game ${gameId}`);
-        navigation.navigate("KahootHomeScreen"); // Redirect after player removal
+        navigation.navigate("Multiplayer"); // Redirect after player removal
       } catch (deleteError) {
         console.error(
           "Error while deleting player document:",
@@ -572,7 +572,6 @@ const commonStyles = {
     fontSize: 18,
     color: "#fff",
     textAlign: "center",
-    fontFamily: "Copperplate",
     flexShrink: 1,
   },
 };

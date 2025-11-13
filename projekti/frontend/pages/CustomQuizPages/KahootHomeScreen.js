@@ -65,20 +65,21 @@ const KahootHomeScreen = () => {
 
   return (
     <View style={commonStyles.container}>
-      <Text style={commonStyles.title}>Welcome to Kahoot Replica</Text>
+      <Text style={commonStyles.title}>Play with others!</Text>
+      
+      <Text style={commonStyles.description}>Host a game</Text>
       <TouchableOpacity style={commonStyles.button} onPress={handleCreateLobby}>
         <Text style={commonStyles.buttonText}>Create Lobby</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={commonStyles.button} onPress={handleJoinLobby}>
-        <Text style={commonStyles.buttonText}>Join Lobby</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={commonStyles.button} onPress={deleteSession}>
-        <Text style={commonStyles.buttonText}>Delete Session</Text>
-      </TouchableOpacity>
+      
+      <Text style={commonStyles.description}>Join an existing game lobby</Text>
+<TouchableOpacity style={commonStyles.button} onPress={handleJoinLobby}>
+  <Text style={commonStyles.buttonText}>Join Lobby</Text>
+</TouchableOpacity>
     </View>
   );
 };
-
+  
 const commonStyles = {
   container: {
     flex: 1,
@@ -92,6 +93,18 @@ const commonStyles = {
     marginBottom: 20,
     textAlign: 'center',
   },
+  description: {
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 5,
+    textAlign: 'center',
+  },
+  subDescription: {
+    fontSize: 14,
+    color: '#999',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
   button: {
     backgroundColor: 'orange',
     width: '50%', 
@@ -100,6 +113,9 @@ const commonStyles = {
     alignItems: 'center',
     borderRadius: 5,
     marginBottom: 10,
+  },
+  deleteButton: {
+    marginTop: 20,
   },
   buttonText: {
     fontSize: 18,

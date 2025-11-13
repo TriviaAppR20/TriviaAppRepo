@@ -211,7 +211,6 @@ const commonStyles = {
     fontSize: 18,
     color: '#fff',
     textAlign: 'center',
-    fontFamily: 'Copperplate',
   },
 };
 

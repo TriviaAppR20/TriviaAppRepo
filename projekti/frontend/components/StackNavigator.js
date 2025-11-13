@@ -47,12 +47,12 @@ export default function StackNavigator() {
         />
 
         {/*Temporary, for accessing Kahoot stuff, can be relocated or deleted later etc*/}
-        <Stack.Screen name="KahootHomeScreen" component={KahootHomeScreen} />
+        <Stack.Screen name="Multiplayer" component={KahootHomeScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Lobby" component={Lobby} />
         <Stack.Screen name="SelectQuiz" component={SelectQuiz} />
         <Stack.Screen
-          name="KahootGameScreen"
+          name="Game Lobby"
           component={KahootGameScreen}
           options={{ headerBackVisible: false }}
         />
